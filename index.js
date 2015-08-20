@@ -70,14 +70,17 @@
                 reject('FtpClient has not been initialized...');
 
             if (this.config.id === 'sftp') {
-                this.client = new FtpClient(this.config.client);
+                this.client = new FtpClient(this.config.client || {});
                 resolve();
             } else {
-                this.client = new FtpClient(this.config.client);
+                this.client = new FtpClient(this.config.client || {});
                 this.client.on('ready', function() {
                     resolve();
                 }.bind(this));
-                this.client.connect(this.config.client);
+                this.client.on('error', function(e) {
+                    reject(new Error('No connection to ftp server'));
+                }.bind(this));
+                this.client.connect(this.config.client || {});
             }
         }.bind(this));
     };
