@@ -1,19 +1,22 @@
 {
-    "name": "ut-port-ftp",
-    "version": "5.0.0",
-    "main": "./index",
-    "dependencies":{
-        "when": "~3.7.2",
-        "ftp": "~0.3.8",
-        "scp2": "~0.2.1",
-        "ut-bus": "~5.0.0"
-    },
-    "publishConfig": {
-        "registry": "http://npm.softwaregroup-bg.com:5001"
-    },
-    "description": "UT port ftp module",
-    "repository": {
-        "type": "git",
-        "url": "git@git.softwaregroup-bg.com:ut5/ut-port-ftp.git"
-    }
+  "name": "ut-port-ftp",
+  "version": "5.0.0",
+  "main": "./index",
+  "dependencies": {
+    "when": "~3.7.2",
+    "ftp": "~0.3.8",
+    "scp2": "~0.2.1",
+    "ut-bus": "~5.0.0"
+  },
+  "devDependencies": {
+    "wire": "~0.10.10"
+  },
+  "publishConfig": {
+    "registry": "http://npm.softwaregroup-bg.com:5001"
+  },
+  "description": "UT port ftp module",
+  "repository": {
+    "type": "git",
+    "url": "git@git.softwaregroup-bg.com:ut5/ut-port-ftp.git"
+  }
 }
