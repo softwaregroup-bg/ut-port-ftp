@@ -1,12 +1,14 @@
 {
     "name": "ut-port-ftp",
-    "version": "5.0.0",
+    "version": "5.2.0",
     "main": "./index",
     "dependencies":{
         "when": "~3.7.2",
         "ftp": "~0.3.8",
-        "scp2": "~0.2.1",
-        "ut-bus": "~5.0.0"
+        "scp2": "~0.2.1"
+    },
+    "peerDependencies":{
+        "ut-bus": "~5.2.0"
     },
     "publishConfig": {
         "registry": "http://npm.softwaregroup-bg.com:5001"
