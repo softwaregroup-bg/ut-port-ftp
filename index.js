@@ -1,216 +1,228 @@
-(function(define) {define(function(require) {
+var fs = require('fs');
+var when = require('when');
+var util = require('util');
+var Port = require('ut-bus/port');
+var errors = require('./errors');
+var FtpClient;
+
+function FtpPort() {
+    Port.call(this);
+    this.config = {
+        id: null,
+        logLevel: '',
+        type: 'ftp'
+    };
     /**
-     * @module FTP Port
-     * @author UT Route Team
-     * @description File Transfer Protocol Port Module for FTP / FTPS / SFTP
-     * @requires fs
-     * @requires when
-     * @requires util
-     * @requires ut-bus/port
+     * @param {Object} client
+     * @description holds the FTP client instance
      */
-    var fs = require('fs');
-    var when = require('when');
-    var util = require('util');
-    var Port = require('ut-bus/port');
-    var FtpClient = {};
+    this.client = null;
+    return this;
+}
 
-    function FtpPort() {
-        Port.call(this);
+util.inherits(FtpPort, Port);
 
-        /**
-         * @param {Object} config
-         * @description Contains all SQL configuration data
-         */
-        this.config = null;
-        /**
-         * @function val
-         * @description Empty validation method
-         */
-        this.val = null;
-        /**
-         * @function log
-         * @description Empty logger method
-         */
-        this.log = null;
-        /**
-         * @param {Object} client
-         * @description holds the FTP client instance
-         */
-        this.client = null;
+/**
+ * @function init
+ * @description Extends the default Port.init() method and determines which ftp client to require
+ */
+FtpPort.prototype.init = function init() {
+    Port.prototype.init.apply(this, arguments);
 
-        return this;
+    if (this.config.protocol === 'sftp') {
+        FtpClient = require('scp2/lib/client').Client;
+    } else {
+        FtpClient = require('ftp');
     }
+};
 
-    util.inherits(FtpPort, Port);
+/**
+ * @function start
+ * @description Extends the default Port.init() method and initializes the ftp client
+ * @return {Promise}
+ */
+FtpPort.prototype.start = function start() {
+    Port.prototype.start.apply(this, arguments);
 
-    /**
-     * @function init
-     * @description Extends the default Port.init() method and determines which ftp client to require
-     */
-    FtpPort.prototype.init = function init() {
-        Port.prototype.init.apply(this, arguments);
+    return when.promise(function(resolve, reject) {
+        if (!(FtpClient instanceof Function)) {
+            reject(errors.ftp('FTP library has not been initialized'));
+        }
 
         if (this.config.id === 'sftp') {
-            FtpClient = require('scp2/lib/client').Client;
+            this.client = new FtpClient(this.config.client || {});
+            resolve();
         } else {
-            FtpClient = require('ftp');
+            this.client = new FtpClient(this.config.client || {});
+            //todo refactor, as starting does not mean wait for connection
+            this.client.on('ready', function() {
+                resolve();
+            }.bind(this));
+            this.client.on('error', function(e) {
+                reject(errors.connection(e));
+            }.bind(this));
+            this.client.connect(this.config.client || {});
         }
-    };
+    }.bind(this));
+};
 
+//todo split to two objects
+/**
+ * @class FTP
+ * @description Private class for separation of the different ftp-related tasks
+ */
+var FTP = {
     /**
-     * @function start
-     * @description Extends the default Port.init() method and initializes the ftp client
+     * @function download
+     * @description Download file through ftp
+     * @param {Object} message
      * @return {Promise}
      */
-    FtpPort.prototype.start = function start() {
-        Port.prototype.start.apply(this, arguments);
-
+    download: function(message) {
+        var port = this;
         return when.promise(function(resolve, reject) {
-            if (!FtpClient instanceof Object)
-                reject('FtpClient has not been initialized...');
-
-            if (this.config.id === 'sftp') {
-                this.client = new FtpClient(this.config.client || {});
-                resolve();
-            } else {
-                this.client = new FtpClient(this.config.client || {});
-                this.client.on('ready', function() {
-                    resolve();
-                }.bind(this));
-                this.client.on('error', function(e) {
-                    reject(new Error('No connection to ftp server'));
-                }.bind(this));
-                this.client.connect(this.config.client || {});
-            }
-        }.bind(this));
-    };
-
-    /**
-     * @function exec
-     * @description Takes a JSON message and executes an ftp method
-     * @return {Object} message JSON object
-     */
-    FtpPort.prototype.exec = function exec(message) {
-        if (message.method.length) {
-            switch (message.method) {
-                case 'download':
-                    FTP.download(this, message);
-                    break;
-                case 'upload':
-                    FTP.upload(this, message);
-                    break;
-                case 'list':
-                    FTP.list(this, message);
-                    break;
-                case 'delete':
-                    FTP.remove(this, message);
-                    break;
-            }
-        } else {
-            throw 'The message sent to FtpPort is malformed...';
-        }
-    };
-
-    /**
-     * @class FTP
-     * @description Private class for separation of the different ftp-related tasks
-     */
-    var FTP = {
-        /**
-         * @function download
-         * @description Download file through ftp
-         * @param {FtpPort} port Current instance of the FtpPort
-         * @return {Object} message JSON object
-         */
-        download: function(port, message) {
             if (port.config.id === 'sftp') {
                 port.client.download(message.remoteFile, message.localFile, function(err) {
-                    if (err)
-                        throw err;
+                    if (err) {
+                        reject(errors.ftp(err));
+                    } else {
+                        resolve(true);
+                    }
                 });
-            } else  {
+            } else {
                 port.client.get(message.remoteFile, function(err, stream) {
-                    if (err)
-                        throw err;
-                    stream.once('close', function() {
-                        port.client.end();
-                    });
-                    stream.pipe(fs.createWriteStream(message.localFile));
+                    if (err) {
+                        reject(errors.ftp(err));
+                    } else {
+                        //todo handle error case
+                        stream.once('close', function() {
+                            resolve(true);
+                            port.client.end();
+                        });
+                        stream.pipe(fs.createWriteStream(message.localFile));
+                    }
                 });
             }
-        },
-        /**
-         * @function upload
-         * @description Uploads file through ftp
-         * @param {FtpPort} port Current instance of the FtpPort
-         * @return {Object} message JSON object
-         */
-        upload: function(port, message) {
+        });
+    },
+    /**
+     * @function upload
+     * @description Uploads file through ftp
+     * @param {Object} message
+     * @return {Promise}
+     */
+    upload: function(message) {
+        var port = this;
+        return when.promise(function(resolve, reject) {
             if (port.config.id === 'sftp') {
                 port.client.upload(message.localFile, message.remoteFile, function(err) {
-                    if (err)
-                        throw err;
+                    if (err) {
+                        reject(errors.ftp(err));
+                    } else {
+                        resolve(true);
+                    }
                 });
             } else {
-                port.client.put(message.localFile, message.remoteFile, function (err) {
-                    if (err)
-                        throw err;
-                    port.client.end();
+                port.client.put(message.localFile, message.remoteFile, function(err) {
+                    if (err) {
+                        reject(errors.ftp(err));
+                    } else {
+                        port.client.end();
+                        resolve(true);
+                    }
                 });
             }
-        },
-        /**
-         * @function list
-         * @description Lists all files within a folder in a remote ftp server
-         * @param {FtpPort} port Current instance of the FtpPort
-         * @return {Object} message JSON object
-         */
-        list: function(port, message) {
+        });
+    },
+    /**
+     * @function list
+     * @description Lists all files within a folder in a remote ftp server
+     * @param {Object} message
+     * @return {Promise}
+     */
+    list: function(message) {
+        var port = this;
+        return when.promise(function(resolve, reject) {
             if (port.config.id === 'sftp') {
                 port.client.sftp(function(err, sftp) {
-                    if (err)
-                        throw err;
-                    sftp.readdir(message.remoteDir, function(err, list) {
-                        if (err)
-                            throw err;
-                        console.dir(list);
-                    });
+                    if (err) {
+                        reject(errors.ftp(err));
+                    } else {
+                        sftp.readdir(message.remoteDir, function(err, list) {
+                            if (err) {
+                                reject(errors.ftp(err));
+                            } else {
+                                resolve(list);
+                            }
+                        });
+                    }
                 });
             } else {
-                port.client.list(message.remoteDir, function (err, list) {
-                    if (err)
-                        throw err;
-                    console.dir(list);
-                    port.client.end();
+                port.client.list(message.remoteDir, function(err, list) {
+                    if (err) {
+                        reject(errors.ftp(err));
+                    } else {
+                        port.client.end();
+                        resolve(list);
+                    }
                 });
             }
-        },
-        /**
-         * @function remove
-         * @description Removes a file through ftp
-         * @param {FtpPort} port Current instance of the FtpPort
-         * @return {Object} message JSON object
-         */
-        remove: function(port, message) {
+        });
+    },
+    /**
+     * @function remove
+     * @description Removes a file through ftp
+     * @param {Object} message
+     * @return {Promise}
+     */
+    remove: function(message) {
+        var port = this;
+        return when.promise(function(resolve, reject) {
             if (port.config.id === 'sftp') {
                 port.client.sftp(function(err, sftp) {
-                    if (err)
-                        throw err;
-                    sftp.unlink(message.remoteFile, function(err) {
-                        if (err)
-                            throw err;
-                    })
+                    if (err) {
+                        reject(errors.ftp(err));
+                    } else {
+                        sftp.unlink(message.remoteFile, function(err) {
+                            if (err) {
+                                reject(errors.ftp(err));
+                            } else {
+                                resolve(true);
+                            }
+
+                        });
+                    }
                 });
             } else {
                 port.client.delete(message.remoteFile, function(err) {
-                    if (err)
-                        throw err;
-                    port.client.end();
+                    if (err) {
+                        reject(errors.ftp(err));
+                    } else {
+                        port.client.end();
+                        resolve(true);
+                    }
                 });
             }
-        }
-    };
+        });
+    }
+};
 
-    return FtpPort;
+/**
+ * @function exec
+ * @description Takes a JSON message and executes an ftp method
+ * @return {Promise}
+ */
+FtpPort.prototype.exec = function exec(message) {
+    var $meta = (arguments.length && arguments[arguments.length - 1]);
+    if (message.method && FTP[message.method]) {
+        return FTP[message.method].apply(this, arguments)
+            .then(function(result) {
+                $meta.mtid = 'response';
+                return result;
+            });
+    } else {
+        return when.reject(errors.ftp('Unknown method ' + message.method));
+    }
+};
 
-});}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(require); }));
+module.exports = FtpPort;
