@@ -28,6 +28,7 @@ util.inherits(FtpPort, Port);
  */
 FtpPort.prototype.init = function init() {
     Port.prototype.init.apply(this, arguments);
+    this.latency = this.counter && this.counter('average', 'lt', 'Latency');
 
     if (this.config.protocol === 'sftp') {
         FtpClient = require('scp2/lib/client').Client;
@@ -51,11 +52,13 @@ FtpPort.prototype.start = function start() {
 
         if (this.config.id === 'sftp') {
             this.client = new FtpClient(this.config.client || {});
+            this.pipeExec(this.exec.bind(this), this.config.concurrency);
             resolve();
         } else {
             this.client = new FtpClient(this.config.client || {});
             //todo refactor, as starting does not mean wait for connection
             this.client.on('ready', function() {
+                this.pipeExec(this.exec.bind(this), this.config.concurrency);
                 resolve();
             }.bind(this));
             this.client.on('error', function(e) {
