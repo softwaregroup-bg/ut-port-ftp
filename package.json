@@ -1,6 +1,6 @@
 {
   "name": "ut-port-ftp",
-  "version": "5.2.0",
+  "version": "5.2.2",
   "main": "./index",
   "dependencies": {
     "when": "~3.7.2",
