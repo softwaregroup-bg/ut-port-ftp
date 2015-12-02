@@ -2,7 +2,7 @@ require('repl').start({useGlobal: true});
 
 var wire = require('wire');
 
-m = wire({
+wire({
     bunyan: {
         create: {
             module: 'ut-log',
@@ -26,7 +26,7 @@ m = wire({
                 id: 'sftp',
                 logLevel: 'trace',
                 // FTP
-                /*client: {
+                /* client: {
                     host: '127.0.0.1',
                     port: '21',
                     user: 'ut5',
@@ -34,7 +34,7 @@ m = wire({
                     debug: console.log
                 }*/
                 // FTPS
-                /*client: {
+                /* client: {
                     host: '127.0.0.1',
                     port: '21',
                     user: 'ut5',
@@ -51,7 +51,7 @@ m = wire({
                     host: '127.0.0.1',
                     port: '22',
                     username: 'martin',
-                    password: 'yolo',
+                    password: 'yolo'
                 }
             },
             logFactory: {$ref: 'bunyan'}

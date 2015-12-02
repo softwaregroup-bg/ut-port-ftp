@@ -9,6 +9,7 @@
     "scp2": "~0.2.1"
   },
   "devDependencies": {
+    "ut-tools": "~0.5.1",
     "wire": "~0.10.10"
   },
   "peerDependencies": {
@@ -18,6 +19,10 @@
     "registry": "http://npm.softwaregroup-bg.com:5001"
   },
   "description": "UT port ftp module",
+  "scripts": {
+    "test": "npm run lint",
+    "lint": "ut-lint ."
+  },
   "repository": {
     "type": "git",
     "url": "git@git.softwaregroup-bg.com:ut5/ut-port-ftp.git"

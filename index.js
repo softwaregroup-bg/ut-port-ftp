@@ -56,20 +56,20 @@ FtpPort.prototype.start = function start() {
             resolve();
         } else {
             this.client = new FtpClient(this.config.client || {});
-            //todo refactor, as starting does not mean wait for connection
+            // todo refactor, as starting does not mean wait for connection
             this.client.on('ready', function() {
                 this.pipeExec(this.exec.bind(this), this.config.concurrency);
                 resolve();
             }.bind(this));
             this.client.on('error', function(e) {
                 reject(errors.connection(e));
-            }.bind(this));
+            });
             this.client.connect(this.config.client || {});
         }
     }.bind(this));
 };
 
-//todo split to two objects
+// todo split to two objects
 /**
  * @class FTP
  * @description Private class for separation of the different ftp-related tasks
@@ -97,7 +97,7 @@ var FTP = {
                     if (err) {
                         reject(errors.ftp(err));
                     } else {
-                        //todo handle error case
+                        // todo handle error case
                         stream.once('close', function() {
                             resolve(true);
                             port.client.end();
@@ -192,7 +192,6 @@ var FTP = {
                             } else {
                                 resolve(true);
                             }
-
                         });
                     }
                 });
