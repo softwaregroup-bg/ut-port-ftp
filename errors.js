@@ -1,13 +1,13 @@
-var create = require('errno').custom.createError;
+var create = require('ut-error').define;
 
-var PortFTP = create('PortFTP');
-var Connection = create('Connection', PortFTP);
+var FTP = create('PortFTP');
+var Connection = create('Connection', FTP);
 
 module.exports = {
     ftp: function(cause) {
-        return new PortFTP('FTP error', cause);
+        return new FTP(cause);
     },
     connection: function(cause) {
-        return new Connection('FTP connection error', cause);
+        return new Connection(cause);
     }
 };
