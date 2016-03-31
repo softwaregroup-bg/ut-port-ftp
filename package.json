@@ -5,13 +5,12 @@
   "dependencies": {
     "lodash": "3.10.1",
     "ut-error": "~5.3.6",
-    "when": "~3.7.2",
-    "ftp": "~0.3.8",
-    "scp2": "~0.2.1"
+    "when": "3.7.7",
+    "ftp": "0.3.10",
+    "scp2": "0.2.2"
   },
   "devDependencies": {
-    "ut-tools": "^5.3.1",
-    "wire": "~0.10.10"
+    "ut-tools": "^5.3.1"
   },
   "peerDependencies": {
     "ut-bus": "~5.3.0"
