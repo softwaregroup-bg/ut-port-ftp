@@ -4,7 +4,7 @@
   "main": "./index.js",
   "dependencies": {
     "lodash": "3.10.1",
-    "ut-error": "~5.3.6",
+    "ut-error": "^5.3.10",
     "when": "3.7.7",
     "ftp": "0.3.10",
     "scp2": "0.2.2"
