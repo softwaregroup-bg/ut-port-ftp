@@ -1,6 +1,6 @@
 {
   "name": "ut-port-ftp",
-  "version": "5.3.6",
+  "version": "5.3.7",
   "main": "./index.js",
   "dependencies": {
     "lodash": "3.10.1",
