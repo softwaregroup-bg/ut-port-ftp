@@ -17,6 +17,8 @@ function FtpPort() {
      * @description holds the FTP client instance
      */
     this.client = null;
+    this.ready = false;
+    this.reconnectInterval = null;
     return this;
 }
 
@@ -45,31 +47,57 @@ FtpPort.prototype.init = function init() {
 FtpPort.prototype.start = function start() {
     Port.prototype.start.apply(this, arguments);
 
-    return when.promise(function(resolve, reject) {
-        if (!(FtpClient instanceof Function)) {
-            reject(errors.ftp('FTP library has not been initialized'));
-        }
+    if (!(FtpClient instanceof Function)) {
+        throw errors.ftp('FTP library has not been initialized');
+    }
 
-        if (this.config.id === 'sftp') {
-            this.client = new FtpClient(this.config.client || {});
+    if (this.config.id === 'sftp') {
+        this.client = new FtpClient(this.config.client || {});
+        this.pipeExec(this.exec.bind(this), this.config.concurrency);
+        resolve();
+    } else {
+        this.client = new FtpClient(this.config.client || {});
+
+        this.client.on('ready', function() {
             this.pipeExec(this.exec.bind(this), this.config.concurrency);
-            resolve();
-        } else {
-            this.client = new FtpClient(this.config.client || {});
-            // todo refactor, as starting does not mean wait for connection
-            this.client.on('ready', function() {
-                this.pipeExec(this.exec.bind(this), this.config.concurrency);
-                resolve();
-            }.bind(this));
-            this.client.on('error', function(e) {
-                reject(errors.connection(e));
-            });
-            this.client.connect(this.config.client || {});
-        }
-    }.bind(this));
+            this.ready = true;
+            this.log && this.log.info && this.log.info('Connected');
+        }.bind(this));
+
+        this.client.on('error', function(e) {
+            this.log && this.log.error && this.log.error(e);
+            this.ready = false;
+            (this.reconnectInterval == null) && this.reconnect();
+        }.bind(this));
+
+        this.client.on('close', function() {
+            this.log && this.log.info && this.log.info('Disconnected');
+            this.ready = false;
+            (this.reconnectInterval == null) && this.reconnect();
+        }.bind(this));
+
+        this.client.connect(this.config.client || {});
+    }
 };
 
-// todo split to two objects
+/**
+ * @function reconnect
+ * @description Extends the default Port.init() method and determines which ftp client to require
+ */
+FtpPort.prototype.reconnect = function() {
+    this.reconnectInterval && clearInterval(this.reconnectInterval); // Ensure no interval will leak
+    this.reconnectInterval = setInterval(function() {
+        if (this.ready) {
+            clearInterval(this.reconnectInterval);
+            this.reconnectInterval = null;
+        } else {
+            this.log && this.log.info && this.log.info('Reconnecting');
+            this.client.connect(this.config.client || {});
+        }
+    }.bind(this), this.config.reconnectInterval || 10000);
+};
+
+//todo split to two objects
 /**
  * @class FTP
  * @description Private class for separation of the different ftp-related tasks
@@ -97,12 +125,21 @@ var FTP = {
                     if (err) {
                         reject(errors.ftp(err));
                     } else {
-                        // todo handle error case
-                        stream.once('close', function() {
-                            resolve(true);
-                            port.client.end();
-                        });
-                        stream.pipe(fs.createWriteStream(message.localFile));
+                        if (!message.localFile) {
+                            var buffer = new Buffer(0);
+                            stream.on('data', function(buf) {
+                                buffer = Buffer.concat([buffer, buf]);
+                            });
+                            stream.once('end', function() {
+                                resolve(buffer);
+                            });
+                        } else {
+                            // todo handle error case
+                            stream.once('close', function() {
+                                resolve(true);
+                            });
+                            stream.pipe(fs.createWriteStream(message.localFile));
+                        }
                     }
                 });
             }
@@ -130,7 +167,6 @@ var FTP = {
                     if (err) {
                         reject(errors.ftp(err));
                     } else {
-                        port.client.end();
                         resolve(true);
                     }
                 });
@@ -165,7 +201,6 @@ var FTP = {
                     if (err) {
                         reject(errors.ftp(err));
                     } else {
-                        port.client.end();
                         resolve(list);
                     }
                 });
@@ -200,7 +235,6 @@ var FTP = {
                     if (err) {
                         reject(errors.ftp(err));
                     } else {
-                        port.client.end();
                         resolve(true);
                     }
                 });
@@ -215,15 +249,19 @@ var FTP = {
  * @return {Promise}
  */
 FtpPort.prototype.exec = function exec(message) {
-    var $meta = (arguments.length && arguments[arguments.length - 1]);
-    if (message.method && FTP[message.method]) {
-        return FTP[message.method].apply(this, arguments)
-            .then(function(result) {
-                $meta.mtid = 'response';
-                return result;
-            });
+    if (this.ready) {
+        var $meta = (arguments.length && arguments[arguments.length - 1]);
+        if (message.method && FTP[message.method]) {
+            return FTP[message.method].apply(this, arguments)
+                .then(function(result) {
+                    $meta.mtid = 'response';
+                    return result;
+                });
+        } else {
+            return when.reject(errors.ftp('Unknown method ' + message.method));
+        }
     } else {
-        return when.reject(errors.ftp('Unknown method ' + message.method));
+        return when.reject(errors.ftp('Connection not ready'));
     }
 };
 
