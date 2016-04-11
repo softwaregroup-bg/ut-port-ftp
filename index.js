@@ -54,7 +54,6 @@ FtpPort.prototype.start = function start() {
     if (this.config.id === 'sftp') {
         this.client = new FtpClient(this.config.client || {});
         this.pipeExec(this.exec.bind(this), this.config.concurrency);
-        resolve();
     } else {
         this.client = new FtpClient(this.config.client || {});
 
@@ -97,7 +96,7 @@ FtpPort.prototype.reconnect = function() {
     }.bind(this), this.config.reconnectInterval || 10000);
 };
 
-//todo split to two objects
+// todo split to two objects
 /**
  * @class FTP
  * @description Private class for separation of the different ftp-related tasks
