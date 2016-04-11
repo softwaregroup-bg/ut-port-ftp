@@ -1,3 +1,17 @@
+<a name="5.3.8"></a>
+## [5.3.8](https://git.softwaregroup-bg.com/ut5/ut-port-ftp/compare/v5.3.7...v5.3.8) (2016-04-11)
+
+
+### Bug Fixes
+
+* eslint typos ([87dbbf5](https://git.softwaregroup-bg.com/ut5/ut-port-ftp/commit/87dbbf5))
+
+### Features
+
+* ftp reconnects automatically when the connection closes; bugfix: do not close co ([248f0b4](https://git.softwaregroup-bg.com/ut5/ut-port-ftp/commit/248f0b4))
+
+
+
 <a name="5.3.7"></a>
 ## [5.3.7](https://git.softwaregroup-bg.com/ut5/ut-port-ftp/compare/v5.3.6...v5.3.7) (2016-04-05)
 
