@@ -1,5 +1,5 @@
 var FTP = require('../index');
-var assign = require('lodash/object/assign');
+var assign = require('lodash.assign');
 
 var ftp = assign(new FTP(), {
     config: {
