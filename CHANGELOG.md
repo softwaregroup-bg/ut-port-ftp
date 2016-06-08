@@ -1,3 +1,13 @@
+<a name="5.3.10"></a>
+## [5.3.10](https://git.softwaregroup-bg.com/ut5/ut-port-ftp/compare/v5.3.9...v5.3.10) (2016-06-08)
+
+
+### Bug Fixes
+
+* upgrade lodash ([893da06](https://git.softwaregroup-bg.com/ut5/ut-port-ftp/commit/893da06))
+
+
+
 <a name="5.3.9"></a>
 ## [5.3.9](https://git.softwaregroup-bg.com/ut5/ut-port-ftp/compare/v5.3.8...v5.3.9) (2016-04-15)
 
