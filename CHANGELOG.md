@@ -1,3 +1,13 @@
+<a name="5.4.1"></a>
+## [5.4.1](https://git.softwaregroup-bg.com/ut5/ut-port-ftp/compare/v5.3.11...v5.4.1) (2016-07-11)
+
+
+### Features
+
+* upgrade dependencies ([1e4232e](https://git.softwaregroup-bg.com/ut5/ut-port-ftp/commit/1e4232e))
+
+
+
 <a name="5.3.11"></a>
 ## [5.3.11](https://git.softwaregroup-bg.com/ut5/ut-port-ftp/compare/v5.3.10...v5.3.11) (2016-06-16)
 
