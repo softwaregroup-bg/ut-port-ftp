@@ -1,3 +1,4 @@
+/* eslint no-console: 0 */
 var FTP = require('../index');
 var assign = require('lodash.assign');
 
@@ -12,7 +13,7 @@ var ftp = assign(new FTP(), {
             user: 'ut5',
             password: 'test123',
             debug: console.log
-        }*/
+        } */
         // FTPS
         /* client: {
             host: '127.0.0.1',
@@ -25,7 +26,7 @@ var ftp = assign(new FTP(), {
                 //ca: [ fs.readFileSync('D:/FTP/certificate.crt', 'utf8') ],
                 rejectUnauthorized: false
             }
-        }*/
+        } */
         // SFTP
         client: {
             host: '127.0.0.1',
@@ -57,6 +58,7 @@ ftp.start().then(function() {
         method: 'delete',
         remoteFile: '/test/upload.txt'
     }).done();
-}).done();
+    return;
+}).catch(err => console.error(err));
 
 ftp.stop();
