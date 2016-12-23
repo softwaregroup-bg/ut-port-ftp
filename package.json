@@ -3,17 +3,17 @@
   "version": "5.4.4",
   "main": "./index.js",
   "dependencies": {
-    "lodash.assign": "4.0.9",
-    "ut-error": "^5.3.12",
+    "lodash.assign": "4.2.0",
+    "ut-error": "^5.3.16",
     "when": "3.7.7",
     "ftp": "0.3.10",
     "scp2": "0.5.0"
   },
   "devDependencies": {
-    "ut-tools": "^5.6.0"
+    "ut-tools": "^5.11.1"
   },
   "peerDependencies": {
-    "ut-bus": "~5.4.2"
+    "ut-bus": "~5.8.1"
   },
   "description": "UT port ftp module",
   "scripts": {
