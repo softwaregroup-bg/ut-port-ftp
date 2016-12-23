@@ -1,3 +1,18 @@
+<a name="5.5.0"></a>
+# [5.5.0](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v5.4.4...v5.5.0) (2016-12-23)
+
+
+### Bug Fixes
+
+* fix lint errors ([bb3992a](https://github.com/softwaregroup-bg/ut-port-ftp/commit/bb3992a))
+
+
+### Features
+
+* update dependencies ([9d088d3](https://github.com/softwaregroup-bg/ut-port-ftp/commit/9d088d3))
+
+
+
 <a name="5.4.4"></a>
 ## [5.4.4](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v5.4.3...v5.4.4) (2016-09-20)
 
