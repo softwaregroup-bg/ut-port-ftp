@@ -1,19 +1,16 @@
 {
   "name": "ut-port-ftp",
-  "version": "5.5.7",
+  "version": "6.0.0",
   "main": "./index.js",
   "dependencies": {
-    "lodash.assign": "4.2.0",
-    "ut-error": "^5.4.0",
-    "when": "3.7.7",
     "ftp": "0.3.10",
-    "scp2": "0.5.0"
+    "ssh2": "0.5.5"
   },
   "devDependencies": {
     "ut-tools": "^5.13.5"
   },
   "peerDependencies": {
-    "ut-bus": "^5.9.0"
+    "ut-bus": "^6.2.0"
   },
   "description": "UT port ftp module",
   "scripts": {

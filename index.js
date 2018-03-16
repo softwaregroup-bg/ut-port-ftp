@@ -1,267 +1,260 @@
-var fs = require('fs');
-var when = require('when');
-var util = require('util');
-var Port = require('ut-bus/port');
-var errors = require('./errors');
-var FtpClient;
+'use strict';
+const merge = require('lodash.merge');
+const util = require('util');
+const fs = require('fs');
+let FtpClient;
 
-function FtpPort() {
-    Port.call(this);
-    this.config = {
-        id: null,
-        logLevel: '',
-        type: 'ftp'
-    };
-    /**
-     * @param {Object} client
-     * @description holds the FTP client instance
-     */
-    this.client = null;
-    this.ready = false;
-    this.reconnectInterval = null;
-    return this;
-}
-
-util.inherits(FtpPort, Port);
-
-/**
- * @function init
- * @description Extends the default Port.init() method and determines which ftp client to require
- */
-FtpPort.prototype.init = function init() {
-    Port.prototype.init.apply(this, arguments);
-    this.latency = this.counter && this.counter('average', 'lt', 'Latency');
-
-    if (this.config.protocol === 'sftp') {
-        FtpClient = require('scp2/lib/client').Client;
-    } else {
-        FtpClient = require('ftp');
-    }
-};
-
-/**
- * @function start
- * @description Extends the default Port.init() method and initializes the ftp client
- * @return {Promise}
- */
-FtpPort.prototype.start = function start() {
-    Port.prototype.start.apply(this, arguments);
-
-    if (!(FtpClient instanceof Function)) {
-        throw errors.ftp('FTP library has not been initialized');
+module.exports = function({parent}) {
+    function FtpPort({config}) {
+        parent && parent.apply(this, arguments);
+        this.config = merge({
+            id: 'ftp',
+            type: 'ftp',
+            logLevel: 'info',
+            protocol: 'ftp',
+            disconnectTimeout: 300000,
+            options: {
+                host: 'localhost',
+                port: 22
+            }
+        }, config);
+        this.client = null;
+        this.connected = false;
+        this.timeoutPointer = null;
     }
 
-    if (this.config.id === 'sftp') {
-        this.client = new FtpClient(this.config.client || {});
-        this.pipeExec(this.exec.bind(this), this.config.concurrency);
-    } else {
-        this.client = new FtpClient(this.config.client || {});
-
-        this.client.on('ready', function() {
-            this.pipeExec(this.exec.bind(this), this.config.concurrency);
-            this.ready = true;
-            this.log && this.log.info && this.log.info('Connected');
-        }.bind(this));
-
-        this.client.on('error', function(e) {
-            this.log && this.log.error && this.log.error(e);
-            this.ready = false;
-            (this.reconnectInterval == null) && this.reconnect();
-        }.bind(this));
-
-        this.client.on('close', function() {
-            this.log && this.log.info && this.log.info('Disconnected');
-            this.ready = false;
-            (this.reconnectInterval == null) && this.reconnect();
-        }.bind(this));
-
-        this.client.connect(this.config.client || {});
+    if (parent) {
+        util.inherits(FtpPort, parent);
     }
-};
 
-/**
- * @function reconnect
- * @description Extends the default Port.init() method and determines which ftp client to require
- */
-FtpPort.prototype.reconnect = function() {
-    this.reconnectInterval && clearInterval(this.reconnectInterval); // Ensure no interval will leak
-    this.reconnectInterval = setInterval(function() {
-        if (this.ready) {
-            clearInterval(this.reconnectInterval);
-            this.reconnectInterval = null;
-        } else {
-            this.log && this.log.info && this.log.info('Reconnecting');
-            this.client.connect(this.config.client || {});
+    let connect = function() {
+        if (this.connected) {
+            return Promise.resolve({});
         }
-    }.bind(this), this.config.reconnectInterval || 10000);
-};
-
-// todo split to two objects
-/**
- * @class FTP
- * @description Private class for separation of the different ftp-related tasks
- */
-var FTP = {
-    /**
-     * @function download
-     * @description Download file through ftp
-     * @param {Object} message
-     * @return {Promise}
-     */
-    download: function(message) {
-        var port = this;
-        return when.promise(function(resolve, reject) {
-            if (port.config.id === 'sftp') {
-                port.client.download(message.remoteFile, message.localFile, function(err) {
-                    if (err) {
-                        reject(errors.ftp(err));
-                    } else {
-                        resolve(true);
-                    }
-                });
-            } else {
-                port.client.get(message.remoteFile, function(err, stream) {
-                    if (err) {
-                        reject(errors.ftp(err));
-                    } else {
-                        if (!message.localFile) {
-                            var buffer = new Buffer(0);
-                            stream.on('data', function(buf) {
-                                buffer = Buffer.concat([buffer, buf]);
-                            });
-                            stream.once('end', function() {
-                                resolve(buffer);
-                            });
-                        } else {
-                            // todo handle error case
-                            stream.once('close', function() {
-                                resolve(true);
-                            });
-                            stream.pipe(fs.createWriteStream(message.localFile));
+        return new Promise((resolve, reject) => {
+            if (this.config.protocol === 'sftp') {
+                this.client.on('ready', function() {
+                    this.client.sftp(function(err, sftp) {
+                        if (err) {
+                            this.client.end();
+                            return reject(err);
                         }
-                    }
-                });
-            }
-        });
-    },
-    /**
-     * @function upload
-     * @description Uploads file through ftp
-     * @param {Object} message
-     * @return {Promise}
-     */
-    upload: function(message) {
-        var port = this;
-        return when.promise(function(resolve, reject) {
-            if (port.config.id === 'sftp') {
-                port.client.upload(message.localFile, message.remoteFile, function(err) {
-                    if (err) {
-                        reject(errors.ftp(err));
-                    } else {
+                        this.sftp = sftp;
+                        this.connected = true;
+                        this.log && this.log.info && this.log.info('Connected');
                         resolve(true);
-                    }
-                });
+                    }.bind(this));
+                }.bind(this));
             } else {
-                port.client.put(message.localFile, message.remoteFile, function(err) {
-                    if (err) {
-                        reject(errors.ftp(err));
-                    } else {
-                        resolve(true);
-                    }
-                });
+                this.client.on('ready', function() {
+                    this.connected = true;
+                    this.log && this.log.info && this.log.info('Connected');
+                    resolve(true);
+                }.bind(this));
             }
+            this.client.on('error', function(e) {
+                this.log && this.log.error && this.log.error(e);
+                reject && reject(e);
+            }.bind(this));
+            this.client.connect(this.config.options);
         });
-    },
-    /**
-     * @function list
-     * @description Lists all files within a folder in a remote ftp server
-     * @param {Object} message
-     * @return {Promise}
-     */
-    list: function(message) {
-        var port = this;
-        return when.promise(function(resolve, reject) {
-            if (port.config.id === 'sftp') {
-                port.client.sftp(function(err, sftp) {
-                    if (err) {
-                        reject(errors.ftp(err));
-                    } else {
-                        sftp.readdir(message.remoteDir, function(err, list) {
-                            if (err) {
-                                reject(errors.ftp(err));
-                            } else {
-                                resolve(list);
-                            }
-                        });
-                    }
-                });
-            } else {
-                port.client.list(message.remoteDir, function(err, list) {
-                    if (err) {
-                        reject(errors.ftp(err));
-                    } else {
-                        resolve(list);
-                    }
-                });
-            }
-        });
-    },
-    /**
-     * @function remove
-     * @description Removes a file through ftp
-     * @param {Object} message
-     * @return {Promise}
-     */
-    remove: function(message) {
-        var port = this;
-        return when.promise(function(resolve, reject) {
-            if (port.config.id === 'sftp') {
-                port.client.sftp(function(err, sftp) {
-                    if (err) {
-                        reject(errors.ftp(err));
-                    } else {
-                        sftp.unlink(message.remoteFile, function(err) {
-                            if (err) {
-                                reject(errors.ftp(err));
-                            } else {
-                                resolve(true);
-                            }
-                        });
-                    }
-                });
-            } else {
-                port.client.delete(message.remoteFile, function(err) {
-                    if (err) {
-                        reject(errors.ftp(err));
-                    } else {
-                        resolve(true);
-                    }
-                });
-            }
-        });
-    }
-};
+    };
 
-/**
- * @function exec
- * @description Takes a JSON message and executes an ftp method
- * @return {Promise}
- */
-FtpPort.prototype.exec = function exec(message) {
-    if (this.ready) {
-        var $meta = (arguments.length && arguments[arguments.length - 1]);
-        if (message.method && FTP[message.method]) {
-            return FTP[message.method].apply(this, arguments)
-                .then(function(result) {
-                    $meta.mtid = 'response';
-                    return result;
-                });
-        } else {
-            return when.reject(errors.ftp('Unknown method ' + message.method));
+    let resetIdle = function() {
+        if (this.config.disconnectTimeout) {
+            this.timeoutPointer && clearTimeout(this.timeoutPointer);
+            this.timeoutPointer = setTimeout(function() {
+                if (this.connected) {
+                    this.log && this.log.info && this.log.info('Disconnecting');
+                    this.client.end();
+                }
+            }.bind(this), this.config.disconnectTimeout);
         }
-    } else {
-        return when.reject(errors.ftp('Connection not ready'));
-    }
-};
+    };
 
-module.exports = FtpPort;
+    FtpPort.prototype.init = function init() {
+        parent && parent.prototype.init.apply(this, arguments);
+        if (this.config.protocol === 'sftp') {
+            FtpClient = require('ssh2').Client;
+            // https://github.com/mscdex/ssh2
+        } else {
+            this.config.options && (this.config.options.user = this.config.options.username);
+            FtpClient = require('ftp');
+            // https://github.com/mscdex/node-ftp
+        }
+    };
+
+    FtpPort.prototype.start = function start(callback) {
+        return Promise.resolve()
+            .then(() => parent.prototype.start.apply(this, Array.prototype.slice.call(arguments)))
+            .then(result => {
+                this.client = new FtpClient();
+
+                this.client.on('end', function() {
+                    this.log && this.log.info && this.log.info('Ended');
+                    this.connected = false;
+                }.bind(this));
+
+                this.client.on('close', function() {
+                    this.log && this.log.info && this.log.info('Disconnected');
+                    this.connected = false;
+                    delete this.sftp;
+                }.bind(this));
+            }).then(result => {
+                this.pull(this.exec);
+                return result;
+            });
+    };
+    FtpPort.prototype.exec = function exec(msg) {
+        let $meta = (arguments.length > 1 && arguments[arguments.length - 1]);
+
+        let methodName = ($meta && $meta.opcode);
+        if (!methodName || !FTP[methodName]) {
+            return Promise.reject(this.bus.errors.methodNotFound(methodName));
+        }
+
+        return connect.call(this)
+            .then(() => {
+                resetIdle.call(this);
+                return FTP[methodName].apply(this, arguments);
+            });
+    };
+
+    var FTP = {
+        /**
+         * @function download
+         * @description Download file through ftp or sftp
+         * @param {remoteFile: file path, localFile: file path} message
+         * @return {Promise}
+         */
+        download: function(message) {
+            var port = this;
+            return new Promise((resolve, reject) => {
+                if (port.config.protocol === 'sftp') {
+                    port.sftp.fastGet(message.remoteFile, message.localFile, function(err) {
+                        if (err) {
+                            return reject(err);
+                        }
+                        resolve(true);
+                    });
+                } else {
+                    port.client.get(message.remoteFile, function(err, stream) {
+                        if (err) {
+                            return reject(err);
+                        }
+                        stream.once('close', function() {
+                            resolve(true);
+                        });
+                        stream.pipe(fs.createWriteStream(message.localFile));
+                    });
+                }
+            });
+        },
+        /**
+         * @function upload
+         * @description Uploads file through ftp or sftp
+         * @param {remoteFile: file path, localFile: file path} message
+         * @return {Promise}
+         */
+        upload: function(message) {
+            var port = this;
+            return new Promise((resolve, reject) => {
+                if (port.config.protocol === 'sftp') {
+                    port.sftp.fastPut(message.localFile, message.remoteFile, function(err) {
+                        if (err) {
+                            return reject(err);
+                        }
+                        resolve(true);
+                    });
+                } else {
+                    port.client.put(message.localFile, message.remoteFile, function(err) {
+                        if (err) {
+                            return reject(err);
+                        }
+                        resolve(true);
+                    });
+                }
+            });
+        },
+        /**
+         * @function list
+         * @description Lists all files within a folder in a remote ftp server
+         * @param {remoteDir: directory path} message
+         * @return {Promise}
+         */
+        list: function(message) {
+            var port = this;
+            return new Promise((resolve, reject) => {
+                if (port.config.protocol === 'sftp') {
+                    port.sftp.readdir(message.remoteDir, function(err, list) {
+                        if (err) {
+                            return reject(err);
+                        }
+                        resolve(list);
+                    });
+                } else {
+                    port.client.list(message.remoteDir, function(err, list) {
+                        if (err) {
+                            return reject(err);
+                        }
+                        resolve(list);
+                    });
+                }
+            });
+        },
+        /**
+         * @function remove
+         * @description Removes a file through ftp
+         * @param {remoteFile: file path} message
+         * @return {Promise}
+         */
+        remove: function(message) {
+            var port = this;
+            return new Promise((resolve, reject) => {
+                if (port.config.protocol === 'sftp') {
+                    port.sftp.unlink(message.remoteFile, function(err) {
+                        if (err) {
+                            return reject(err);
+                        }
+                        resolve(true);
+                    });
+                } else {
+                    port.client.delete(message.remoteFile, function(err) {
+                        if (err) {
+                            return reject(err);
+                        }
+                        resolve(true);
+                    });
+                }
+            });
+        },
+        /**
+         * @function move
+         * @description Мoves a file
+         * @param {oldPath: file path, newPath: file path} message
+         * @return {Promise}
+         */
+        move: function(message) {
+            var port = this;
+            return new Promise((resolve, reject) => {
+                if (port.config.protocol === 'sftp') {
+                    port.sftp.rename(message.oldPath, message.newPath, function(err) {
+                        if (err) {
+                            return reject(err);
+                        }
+                        resolve(true);
+                    });
+                } else {
+                    port.client.rename(message.oldPath, message.newPath, function(err) {
+                        if (err) {
+                            return reject(err);
+                        }
+                        resolve(true);
+                    });
+                }
+            });
+        }
+    };
+
+    return FtpPort;
+};
