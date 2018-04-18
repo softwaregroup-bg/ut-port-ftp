@@ -1,5 +1,4 @@
 'use strict';
-const merge = require('lodash.merge');
 const util = require('util');
 const fs = require('fs');
 let FtpClient;
@@ -7,7 +6,7 @@ let FtpClient;
 module.exports = function({parent}) {
     function FtpPort({config}) {
         parent && parent.apply(this, arguments);
-        this.config = merge({
+        this.config = Object.assign({
             id: 'ftp',
             type: 'ftp',
             logLevel: 'info',
@@ -100,6 +99,7 @@ module.exports = function({parent}) {
                     this.connected = false;
                     delete this.sftp;
                 }.bind(this));
+                return {};
             }).then(result => {
                 this.pull(this.exec);
                 return result;
