@@ -5,7 +5,7 @@
   "dependencies": {
     "ftp": "0.3.10",
     "ssh2": "0.5.5",
-    "lodash.assign": "4.2.0"
+    "lodash.merge": "4.6.1"
   },
   "devDependencies": {
     "ut-tools": "^5.32.8"
