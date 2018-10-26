@@ -58,7 +58,7 @@ ftp.start().then(function() {
         method: 'delete',
         remoteFile: '/test/upload.txt'
     }).done();
-    return;
+    return true;
 }).catch(err => console.error(err));
 
 ftp.stop();

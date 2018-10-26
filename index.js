@@ -125,7 +125,7 @@ var FTP = {
                         reject(errors.ftp(err));
                     } else {
                         if (!message.localFile) {
-                            var buffer = new Buffer(0);
+                            var buffer = Buffer.alloc(0);
                             stream.on('data', function(buf) {
                                 buffer = Buffer.concat([buffer, buf]);
                             });
