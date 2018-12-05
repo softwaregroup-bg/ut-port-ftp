@@ -1,4 +1,4 @@
-var errors = require('./errors');
+var fs = require('fs');
 
 module.exports = function({utPort}) {
     let ftpPortErrors;
@@ -147,6 +147,7 @@ module.exports = function({utPort}) {
             this.client = null;
             this.ready = false;
             this.reconnectInterval = null;
+            this.FtpClient = null;
         }
 
         get defaults() {
@@ -163,9 +164,9 @@ module.exports = function({utPort}) {
             this.bytesReceived = this.counter && this.counter('counter', 'br', 'Bytes received', 300);
 
             if (this.config.protocol === 'sftp') {
-                FtpClient = require('scp2/lib/client').Client;
+                this.FtpClient = require('scp2/lib/client').Client;
             } else {
-                FtpClient = require('ftp');
+                this.FtpClient = require('ftp');
             }
             return result;
         }
@@ -173,15 +174,15 @@ module.exports = function({utPort}) {
         async start() {
             await super.start(...arguments);
 
-            if (!(FtpClient instanceof Function)) {
+            if (!(this.FtpClient instanceof Function)) {
                 throw ftpPortErrors['ftpPort.lib.init']('FTP library has not been initialized');
             }
 
             if (this.config.id === 'sftp') {
-                this.client = new FtpClient(this.config.client || {});
+                this.client = new this.FtpClient(this.config.client || {});
                 this.pull(this.exec, {conId: 1});
             } else {
-                this.client = new FtpClient(this.config.client || {});
+                this.client = new this.FtpClient(this.config.client || {});
 
                 this.client.on('ready', function() {
                     this.pull(this.exec, {conId: 1});
