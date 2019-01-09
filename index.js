@@ -180,12 +180,12 @@ module.exports = function({utPort}) {
 
             if (this.config.id === 'sftp') {
                 this.client = new this.FtpClient(this.config.client || {});
-                this.pull(this.exec, {conId: 1});
+                this.pull(this.exec);
             } else {
                 this.client = new this.FtpClient(this.config.client || {});
 
                 this.client.on('ready', function() {
-                    this.pull(this.exec, {conId: 1});
+                    this.pull(this.exec);
                     this.ready = true;
                     this.log && this.log.info && this.log.info('Connected');
                 }.bind(this));
