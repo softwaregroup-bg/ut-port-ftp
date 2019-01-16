@@ -165,8 +165,10 @@ module.exports = function({utPort}) {
 
             if (this.config.protocol === 'sftp') {
                 this.FtpClient = require('scp2/lib/client').Client;
+                this.FtpDisconnect = () => this.FtpClient.close();
             } else {
                 this.FtpClient = require('ftp');
+                this.FtpDisconnect = () => this.FtpClient.destroy();
             }
             return result;
         }
@@ -235,6 +237,20 @@ module.exports = function({utPort}) {
             } else {
                 return Promise.reject(ftpPortErrors['ftpPort.connection.notReady']());
             }
+        }
+
+        stop() {
+            if (this.FtpDisconnect) {
+                let disconnect = this.FtpDisconnect;
+                this.FtpDisconnect = null;
+                disconnect.call(this);
+            }
+            if (this.reconnectInterval) {
+                let interval = this.reconnectInterval;
+                this.reconnectInterval = null;
+                clearInterval(interval);
+            }
+            return super.stop(...arguments);
         }
     };
 };
