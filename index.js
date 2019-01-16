@@ -186,12 +186,8 @@ module.exports = function({utPort}) {
             this.bytesReceived = this.counter && this.counter('counter', 'br', 'Bytes received', 300);
 
             if (this.config.protocol === 'sftp') {
-<<<<<<< HEAD
                 this.FtpClient = require('scp2').Client;
-=======
-                this.FtpClient = require('scp2/lib/client').Client;
                 this.FtpDisconnect = () => this.FtpClient.close();
->>>>>>> remotes/origin/minor/rc-godfather
             } else {
                 this.FtpClient = require('ftp');
                 this.FtpDisconnect = () => this.FtpClient.destroy();
@@ -234,7 +230,6 @@ module.exports = function({utPort}) {
                 throw ftpPortErrors['ftpPort.lib.init']('FTP library has not been initialized');
             }
 
-<<<<<<< HEAD
             if (this.config.protocol === 'sftp') {
                 this.client = new this.FtpClient(this.config.client.secureOptions || {});
 
@@ -251,10 +246,6 @@ module.exports = function({utPort}) {
                     this.log && this.log.info && this.log.info('Disconnected');
                 }.bind(this));
 
-=======
-            if (this.config.id === 'sftp') {
-                this.client = new this.FtpClient(this.config.client || {});
->>>>>>> remotes/origin/minor/rc-godfather
                 this.pull(this.exec);
             } else {
                 this.client = new this.FtpClient(this.config.client || {});
