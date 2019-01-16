@@ -187,10 +187,8 @@ module.exports = function({utPort}) {
 
             if (this.config.protocol === 'sftp') {
                 this.FtpClient = require('scp2').Client;
-                this.FtpDisconnect = () => this.FtpClient.close();
             } else {
                 this.FtpClient = require('ftp');
-                this.FtpDisconnect = () => this.FtpClient.destroy();
             }
 
             if (this.config.client.secure) {
@@ -232,6 +230,7 @@ module.exports = function({utPort}) {
 
             if (this.config.protocol === 'sftp') {
                 this.client = new this.FtpClient(this.config.client.secureOptions || {});
+                this.FtpDisconnect = () => this.client.close();
 
                 this.client.on('connect', function() {
                     this.log && this.log.info && this.log.info('Connected');
@@ -249,6 +248,7 @@ module.exports = function({utPort}) {
                 this.pull(this.exec);
             } else {
                 this.client = new this.FtpClient(this.config.client || {});
+                this.FtpDisconnect = () => this.client.destroy();
 
                 this.client.on('ready', function() {
                     this.pull(this.exec);
