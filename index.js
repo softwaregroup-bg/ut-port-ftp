@@ -81,13 +81,7 @@ module.exports = function({utPort}) {
         append: function(message) {
             return new Promise((resolve, reject) => {
                 if (this.config.protocol === 'sftp') {
-                    this.client.write({destination: message.fileName, content: message.data}, function(err) {
-                        if (err) {
-                            reject(ftpPortErrors['ftpPort'](err));
-                        } else {
-                            resolve(true);
-                        }
-                    })
+                    reject(ftpPortErrors['ftpPort.unknownMethod'](message.method));
                 } else {
                     this.client.append(Buffer.from(message.data, 'utf8'), message.fileName, false, function(err) {
                         if (err) {
@@ -166,6 +160,7 @@ module.exports = function({utPort}) {
             });
         }
     };
+
     return class FtpPort extends utPort {
         constructor() {
             super(...arguments);
@@ -191,23 +186,37 @@ module.exports = function({utPort}) {
             this.bytesReceived = this.counter && this.counter('counter', 'br', 'Bytes received', 300);
 
             if (this.config.protocol === 'sftp') {
-                this.FtpClient = require('scp2/lib/client').Client;
+                this.FtpClient = require('scp2').Client;
             } else {
                 this.FtpClient = require('ftp');
             }
 
-            this.config.client.secureOptions = Object.assign({}, this.config.client.secureOptions || {});
+            if (this.config.client.secure) {
+                this.config.client.secureOptions = Object.assign({}, this.config.client.secureOptions || {});
 
-            if (this.config.client.certificatePath && this.config.client.certificatePath.length) {
-                this.config.client.secureOptions = Object.assign(this.config.client.secureOptions, {
-                    cert: fs.readFileSync(this.config.client.certificatePath, 'utf8')
-                });
+                if (this.config.client.certificatePath && this.config.client.certificatePath.length) {
+                    if (this.config.protocol === 'sftp') {
+                        
+                    } else {
+                        this.config.client.secureOptions = Object.assign(this.config.client.secureOptions, {
+                            cert: fs.readFileSync(this.config.client.certificatePath, 'utf8')
+                        });
+                    }
+                }
+                if (this.config.client.keyPath && this.config.client.keyPath.length) {
+                    if (this.config.protocol === 'sftp') {
+                        this.config.client.secureOptions = Object.assign(this.config.client.secureOptions, {
+                            privateKey: fs.readFileSync(this.config.client.keyPath, 'utf8')
+                        });
+                    } else {
+                        this.config.client.secureOptions = Object.assign(this.config.client.secureOptions, {
+                            key: fs.readFileSync(this.config.client.keyPath, 'utf8')
+                        });
+                    }
+                }
+            } else {
+                this.config.client.secureOptions = undefined;
             }
-            // if (this.config.client.keyPath && this.config.client.keyPath.length) {
-            //     this.config.client.secureOptions = Object.assign(this.config.client.secureOptions, {
-            //         key: fs.readFileSync(this.config.client.keyPath, 'utf8')
-            //     });
-            // }
 
             return result;
         }
@@ -220,16 +229,21 @@ module.exports = function({utPort}) {
             }
 
             if (this.config.protocol === 'sftp') {
-                this.client = new this.FtpClient(this.config.client || {});
+                this.client = new this.FtpClient(this.config.client.secureOptions || {});
 
                 this.client.on('connect', function() {
                     this.log && this.log.info && this.log.info('Connected');
                 }.bind(this));
-                
+
                 this.client.on('ready', function() {
-                    this.log && this.log.info && this.log.info('Connected');
+                    this.log && this.log.info && this.log.info('Ready');
                 }.bind(this));
-                
+
+                this.client.on('end', function() {
+                    this.client.close();
+                    this.log && this.log.info && this.log.info('Disconnected');
+                }.bind(this));
+
                 this.pull(this.exec);
             } else {
                 this.client = new this.FtpClient(this.config.client || {});
@@ -265,7 +279,7 @@ module.exports = function({utPort}) {
                     this.reconnectInterval = null;
                 } else {
                     this.log && this.log.info && this.log.info('Reconnecting');
-                    this.client.connect(this.config.client || {});
+                    this.client.connect(Object.assign({}, this.config.client, {user: this.config.client.username}));
                 }
             }.bind(this), this.config.reconnectInterval || 10000);
         }
