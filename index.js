@@ -91,7 +91,7 @@ module.exports = function({utPort}) {
                         }
                     });
                 }
-            })
+            });
         },
         /**
          * @function list
@@ -198,7 +198,7 @@ module.exports = function({utPort}) {
 
                 if (this.config.client.certificatePath && this.config.client.certificatePath.length) {
                     if (this.config.protocol === 'sftp') {
-                        
+
                     } else {
                         this.config.client.secureOptions = Object.assign(this.config.client.secureOptions, {
                             cert: fs.readFileSync(this.config.client.certificatePath, 'utf8')
