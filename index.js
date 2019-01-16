@@ -207,6 +207,11 @@ module.exports = function({utPort}) {
             return {};
         }
 
+        async destroy() {
+            clearInterval(this.reconnectInterval);
+            return super.destroy(...arguments);
+        }
+
         reconnect() {
             this.reconnectInterval && clearInterval(this.reconnectInterval); // Ensure no interval will leak
             this.reconnectInterval = setInterval(function() {
