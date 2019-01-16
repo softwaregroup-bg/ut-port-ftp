@@ -12,7 +12,7 @@ module.exports = function({utPort}) {
          */
         download: function(message) {
             return new Promise((resolve, reject) => {
-                if (this.config.id === 'sftp') {
+                if (this.config.protocol === 'sftp') {
                     this.client.download(message.remoteFile, message.localFile, function(err) {
                         if (err) {
                             reject(ftpPortErrors['ftpPort'](err));
@@ -53,7 +53,7 @@ module.exports = function({utPort}) {
          */
         upload: function(message) {
             return new Promise((resolve, reject) => {
-                if (this.config.id === 'sftp') {
+                if (this.config.protocol === 'sftp') {
                     this.client.upload(message.localFile, message.remoteFile, function(err) {
                         if (err) {
                             reject(ftpPortErrors['ftpPort'](err));
@@ -73,6 +73,27 @@ module.exports = function({utPort}) {
             });
         },
         /**
+         * @function append
+         * @description Appends data to file through ftp
+         * @param {Object} message
+         * @return {Promise}
+         */
+        append: function(message) {
+            return new Promise((resolve, reject) => {
+                if (this.config.protocol === 'sftp') {
+                    reject(ftpPortErrors['ftpPort.unknownMethod'](message.method));
+                } else {
+                    this.client.append(Buffer.from(message.data, 'utf8'), message.fileName, false, function(err) {
+                        if (err) {
+                            reject(ftpPortErrors['ftpPort'](err));
+                        } else {
+                            resolve(true);
+                        }
+                    });
+                }
+            });
+        },
+        /**
          * @function list
          * @description Lists all files within a folder in a remote ftp server
          * @param {Object} message
@@ -80,7 +101,7 @@ module.exports = function({utPort}) {
          */
         list: function(message) {
             return new Promise((resolve, reject) => {
-                if (this.config.id === 'sftp') {
+                if (this.config.protocol === 'sftp') {
                     this.client.sftp(function(err, sftp) {
                         if (err) {
                             reject(ftpPortErrors['ftpPort'](err));
@@ -113,7 +134,7 @@ module.exports = function({utPort}) {
          */
         remove: function(message) {
             return new Promise((resolve, reject) => {
-                if (this.config.id === 'sftp') {
+                if (this.config.protocol === 'sftp') {
                     this.client.sftp(function(err, sftp) {
                         if (err) {
                             reject(ftpPortErrors['ftpPort'](err));
@@ -139,6 +160,7 @@ module.exports = function({utPort}) {
             });
         }
     };
+
     return class FtpPort extends utPort {
         constructor() {
             super(...arguments);
@@ -154,7 +176,7 @@ module.exports = function({utPort}) {
             return {
                 id: null,
                 logLevel: '',
-                type: 'ftp'
+                protocol: 'ftp'
             };
         }
 
@@ -164,12 +186,40 @@ module.exports = function({utPort}) {
             this.bytesReceived = this.counter && this.counter('counter', 'br', 'Bytes received', 300);
 
             if (this.config.protocol === 'sftp') {
-                this.FtpClient = require('scp2/lib/client').Client;
+                this.FtpClient = require('scp2').Client;
                 this.FtpDisconnect = () => this.FtpClient.close();
             } else {
                 this.FtpClient = require('ftp');
                 this.FtpDisconnect = () => this.FtpClient.destroy();
             }
+
+            if (this.config.client.secure) {
+                this.config.client.secureOptions = Object.assign({}, this.config.client.secureOptions || {});
+
+                if (this.config.client.certificatePath && this.config.client.certificatePath.length) {
+                    if (this.config.protocol === 'sftp') {
+
+                    } else {
+                        this.config.client.secureOptions = Object.assign(this.config.client.secureOptions, {
+                            cert: fs.readFileSync(this.config.client.certificatePath, 'utf8')
+                        });
+                    }
+                }
+                if (this.config.client.keyPath && this.config.client.keyPath.length) {
+                    if (this.config.protocol === 'sftp') {
+                        this.config.client.secureOptions = Object.assign(this.config.client.secureOptions, {
+                            privateKey: fs.readFileSync(this.config.client.keyPath, 'utf8')
+                        });
+                    } else {
+                        this.config.client.secureOptions = Object.assign(this.config.client.secureOptions, {
+                            key: fs.readFileSync(this.config.client.keyPath, 'utf8')
+                        });
+                    }
+                }
+            } else {
+                this.config.client.secureOptions = undefined;
+            }
+
             return result;
         }
 
@@ -180,8 +230,22 @@ module.exports = function({utPort}) {
                 throw ftpPortErrors['ftpPort.lib.init']('FTP library has not been initialized');
             }
 
-            if (this.config.id === 'sftp') {
-                this.client = new this.FtpClient(this.config.client || {});
+            if (this.config.protocol === 'sftp') {
+                this.client = new this.FtpClient(this.config.client.secureOptions || {});
+
+                this.client.on('connect', function() {
+                    this.log && this.log.info && this.log.info('Connected');
+                }.bind(this));
+
+                this.client.on('ready', function() {
+                    this.log && this.log.info && this.log.info('Ready');
+                }.bind(this));
+
+                this.client.on('end', function() {
+                    this.client.close();
+                    this.log && this.log.info && this.log.info('Disconnected');
+                }.bind(this));
+
                 this.pull(this.exec);
             } else {
                 this.client = new this.FtpClient(this.config.client || {});
@@ -204,7 +268,7 @@ module.exports = function({utPort}) {
                     (this.reconnectInterval == null) && this.reconnect();
                 }.bind(this));
 
-                this.client.connect(this.config.client || {});
+                this.client.connect(Object.assign({}, this.config.client, {user: this.config.client.username}));
             }
             return {};
         }
@@ -217,13 +281,13 @@ module.exports = function({utPort}) {
                     this.reconnectInterval = null;
                 } else {
                     this.log && this.log.info && this.log.info('Reconnecting');
-                    this.client.connect(this.config.client || {});
+                    this.client.connect(Object.assign({}, this.config.client, {user: this.config.client.username}));
                 }
             }.bind(this), this.config.reconnectInterval || 10000);
         }
 
         exec(message) {
-            if (this.ready) {
+            if (this.config.protocol === 'sftp' || this.ready) {
                 var $meta = (arguments.length && arguments[arguments.length - 1]);
                 if (message.method && FTP[message.method]) {
                     return FTP[message.method].apply(this, arguments)
