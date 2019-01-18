@@ -175,7 +175,6 @@ module.exports = function({utPort}) {
         get defaults() {
             return {
                 id: null,
-                logLevel: '',
                 protocol: 'ftp'
             };
         }
