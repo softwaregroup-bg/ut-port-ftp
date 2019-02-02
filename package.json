@@ -1,19 +1,17 @@
 {
   "name": "ut-port-ftp",
-  "version": "5.5.7",
+  "version": "5.6.0-rc-godfather.7",
   "main": "./index.js",
   "dependencies": {
     "lodash.assign": "4.2.0",
-    "ut-error": "^5.4.0",
-    "when": "3.7.7",
     "ftp": "0.3.10",
     "scp2": "0.5.0"
   },
   "devDependencies": {
-    "ut-tools": "^5.13.5"
+    "ut-tools": "^6.3.6"
   },
   "peerDependencies": {
-    "ut-bus": "^5.9.0"
+    "ut-bus": "^6.7.0"
   },
   "description": "UT port ftp module",
   "scripts": {
@@ -26,6 +24,7 @@
     "postpublish": "ut-postpublish",
     "postversion": "ut-postversion",
     "precommit": "ut-precommit",
+    "precover": "ut-precover",
     "prepublish": "ut-prepublish",
     "prepush": "ut-prepush",
     "pretest": "ut-pretest",
