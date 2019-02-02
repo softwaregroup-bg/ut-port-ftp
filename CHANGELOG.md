@@ -1,3 +1,7 @@
+# [5.6.0](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v5.6.0-rc-godfather.7...v5.6.0) (2019-02-02)
+
+
+
 <a name="5.5.7"></a>
 ## [5.5.7](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v5.5.6...v5.5.7) (2017-05-22)
 
