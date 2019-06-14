@@ -167,7 +167,7 @@ module.exports = function({utPort}) {
             if (!this.errors || !this.errors.getError) throw new Error('Please use the latest version of ut-port');
             ftpPortErrors = require('./errors')(this.errors);
             this.client = null;
-            this.ready = false;
+            this.isReady = false;
             this.reconnecting = false;
             this.reconnectInterval = null;
             this.FtpClient = null;
@@ -255,21 +255,21 @@ module.exports = function({utPort}) {
 
                 this.client.on('ready', function() {
                     this.pull(this.exec);
-                    this.ready = true;
+                    this.isReady = true;
                     this.reconnecting = false;
                     this.log && this.log.info && this.log.info('Connected');
                 }.bind(this));
 
                 this.client.on('error', function(e) {
                     this.log && this.log.error && this.log.error(e);
-                    this.ready = false;
+                    this.isReady = false;
                     this.reconnecting = false;
                     (this.reconnectInterval == null) && this.reconnect();
                 }.bind(this));
 
                 this.client.on('close', function() {
                     this.log && this.log.info && this.log.info('Disconnected');
-                    this.ready = false;
+                    this.isReady = false;
                     this.reconnecting = false;
                     (this.reconnectInterval == null) && this.reconnect();
                 }.bind(this));
@@ -282,7 +282,7 @@ module.exports = function({utPort}) {
         reconnect() {
             this.reconnectInterval && clearInterval(this.reconnectInterval); // Ensure no interval will leak
             this.reconnectInterval = setInterval(function() {
-                if (this.ready) {
+                if (this.isReady) {
                     clearInterval(this.reconnectInterval);
                     this.reconnectInterval = null;
                 } else if (!this.reconnecting) {
@@ -294,7 +294,7 @@ module.exports = function({utPort}) {
         }
 
         exec(message) {
-            if (this.config.protocol === 'sftp' || this.ready) {
+            if (this.config.protocol === 'sftp' || this.isReady) {
                 var $meta = (arguments.length && arguments[arguments.length - 1]);
                 if (message.method && FTP[message.method]) {
                     return FTP[message.method].apply(this, arguments)
