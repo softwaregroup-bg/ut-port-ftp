@@ -175,6 +175,7 @@ module.exports = function({utPort}) {
 
         get defaults() {
             return {
+                type: 'ftpclient',
                 protocol: 'ftp'
             };
         }
