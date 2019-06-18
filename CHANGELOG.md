@@ -1,3 +1,12 @@
+## [5.6.2](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v5.6.1...v5.6.2) (2019-06-18)
+
+
+### Bug Fixes
+
+* prevent multiple connections ([51db0f0](https://github.com/softwaregroup-bg/ut-port-ftp/commit/51db0f0))
+
+
+
 ## [5.6.1](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v5.6.0...v5.6.1) (2019-03-22)
 
 
