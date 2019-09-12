@@ -32,7 +32,7 @@ To use any of the available ftp commands, a call to __exec__ method should be do
 
 - `download` - download file through ftp
 - `upload` - upload file through ftp
-- `append` - append data to file through ftp (__NOTE: not available for sftp !__); _message_ structure:
+- `append` - append data to file through ftp; _message_ structure:
     - _method_ = 'append'
     - _data_ (string) - data to be appended
     - _fileName_ (string) - relative path and name of the file on the ftp server to which the _data_ will be appended
