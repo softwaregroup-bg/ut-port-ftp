@@ -81,7 +81,18 @@ module.exports = function({utPort}) {
         append: function(message) {
             return new Promise((resolve, reject) => {
                 if (this.config.protocol === 'sftp') {
-                    reject(ftpPortErrors['ftpPort.unknownMethod'](message.method));
+                    this.client.sftp(function(err, sftp) {
+                        if (err) {
+                            reject(ftpPortErrors['ftpPort'](err));
+                        }
+                        sftp.appendFile(message.fileName, Buffer.from(message.data, 'utf8'), false, function(err) {
+                            if (err) {
+                                reject(ftpPortErrors['ftpPort'](err));
+                            } else {
+                                resolve(true);
+                            }
+                        });
+                    });
                 } else {
                     this.client.append(Buffer.from(message.data, 'utf8'), message.fileName, false, function(err) {
                         if (err) {
@@ -222,7 +233,7 @@ module.exports = function({utPort}) {
         }
 
         async start() {
-            await super.start(...arguments);
+            let result = await super.start(...arguments);
 
             if (!(this.FtpClient instanceof Function)) {
                 throw ftpPortErrors['ftpPort.lib.init']('FTP library has not been initialized');
@@ -276,7 +287,8 @@ module.exports = function({utPort}) {
 
                 this.client.connect(Object.assign({}, this.config.client, {user: this.config.client.username}));
             }
-            return {};
+
+            return result;
         }
 
         reconnect() {
