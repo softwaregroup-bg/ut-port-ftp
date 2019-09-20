@@ -1,3 +1,12 @@
+# [5.7.0](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v5.6.2...v5.7.0) (2019-09-20)
+
+
+### Features
+
+* sftp append ([#9](https://github.com/softwaregroup-bg/ut-port-ftp/issues/9)) ([4d89458](https://github.com/softwaregroup-bg/ut-port-ftp/commit/4d89458))
+
+
+
 ## [5.6.2](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v5.6.1...v5.6.2) (2019-06-18)
 
 
