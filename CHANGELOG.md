@@ -1,3 +1,7 @@
+## [5.7.2](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v5.7.1...v5.7.2) (2020-01-17)
+
+
+
 ## [5.7.1](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v5.7.0...v5.7.1) (2019-10-01)
 
 
