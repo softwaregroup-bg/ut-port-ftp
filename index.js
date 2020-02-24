@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 module.exports = function({utPort, registerErrors}) {
-    let ftpPortErrors;
+    const ftpPortErrors = {};
 
     const FTP = {
         /**
@@ -202,23 +202,9 @@ module.exports = function({utPort, registerErrors}) {
                                 enum: ['ftp', 'sftp'],
                                 default: 'ftp'
                             },
-                            host: {
-                                type: 'string',
-                                default: '127.0.0.1'
-                            },
-                            port: {
-                                type: 'integer',
-                                default: 21
-                            },
                             secure: {
-                                type: ['integer', 'string'],
-                                default: false,
-                                enum: [
-                                    'control',
-                                    'implicit',
-                                    true,
-                                    false
-                                ]
+                                type: 'boolean',
+                                default: false
                             },
                             secureOptions: {
                                 type: 'object',
@@ -229,31 +215,32 @@ module.exports = function({utPort, registerErrors}) {
                                     }
                                 }
                             },
+                            host: {
+                                type: 'string',
+                                default: '127.0.0.1'
+                            },
+                            port: {
+                                type: 'integer',
+                                default: 21
+                            },
                             username: {
                                 type: 'string'
                             },
                             password: {
                                 type: 'string'
-                            },
-                            keepalive: {
-                                type: 'integer',
-                                default: 10000
-                            },
-                            certificatePath: {
-                                type: 'string'
-                            },
-                            keyPath: {
-                                type: 'string'
                             }
-                        }
+                        },
+                        required: [
+                            'protocol',
+                            'host',
+                            'port',
+                            'username',
+                            'password'
+                        ]
                     }
                 },
                 required: [
-                    'protocol',
-                    'host',
-                    'port',
-                    'username',
-                    'password'
+                    'client'
                 ]
             };
         }
