@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-module.exports = function({utPort}) {
+module.exports = function({utPort, registerErrors}) {
     let ftpPortErrors;
 
     const FTP = {
@@ -175,8 +175,6 @@ module.exports = function({utPort}) {
     return class FtpPort extends utPort {
         constructor() {
             super(...arguments);
-            if (!this.errors || !this.errors.getError) throw new Error('Please use the latest version of ut-port');
-            ftpPortErrors = require('./errors')(this.errors);
             this.client = null;
             this.isReady = false;
             this.reconnecting = false;
@@ -186,6 +184,7 @@ module.exports = function({utPort}) {
 
         get defaults() {
             return {
+                id: 'ftp',
                 type: 'ftpclient',
                 protocol: 'ftp'
             };
@@ -193,6 +192,8 @@ module.exports = function({utPort}) {
 
         async init() {
             const result = await super.init(...arguments);
+            Object.assign(ftpPortErrors, registerErrors(require('./errors')));
+
             this.bytesSent = this.counter && this.counter('counter', 'bs', 'Bytes sent', 300);
             this.bytesReceived = this.counter && this.counter('counter', 'br', 'Bytes received', 300);
 
@@ -236,7 +237,7 @@ module.exports = function({utPort}) {
             const result = await super.start(...arguments);
 
             if (!(this.FtpClient instanceof Function)) {
-                throw ftpPortErrors['ftpPort.lib.init']('FTP library has not been initialized');
+                throw ftpPortErrors['ftpPort.init']('FTP library has not been initialized');
             }
 
             if (this.config.protocol === 'sftp') {

@@ -1,0 +1,7 @@
+{
+    "ftpPort": "Ftp error",
+    "ftpPort.init": "FTP has not been initialized",
+    "ftpPort.unknownMethod": "Unknown method",
+    "ftpPort.connection": "Connection",
+    "ftpPort.connection.notReady": "Connection not ready"
+}
