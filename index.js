@@ -190,6 +190,74 @@ module.exports = function({utPort, registerErrors}) {
             };
         }
 
+        get schema() {
+            return {
+                type: 'object',
+                properties: {
+                    client: {
+                        type: 'object',
+                        properties: {
+                            protocol: {
+                                type: 'string',
+                                enum: ['ftp', 'sftp'],
+                                default: 'ftp'
+                            },
+                            host: {
+                                type: 'string',
+                                default: '127.0.0.1'
+                            },
+                            port: {
+                                type: 'integer',
+                                default: '21'
+                            },
+                            secure: {
+                                type: ['integer', 'string'],
+                                default: false,
+                                enum: [
+                                    'control',
+                                    'implicit',
+                                    true,
+                                    false
+                                ]
+                            },
+                            secureOptions: {
+                                type: 'object',
+                                properties: {
+                                    rejectUnauthorized: {
+                                        type: 'boolean',
+                                        default: true
+                                    }
+                                }
+                            },
+                            username: {
+                                type: 'string'
+                            },
+                            password: {
+                                type: 'string'
+                            },
+                            keepalive: {
+                                type: 'integer',
+                                default: 10000
+                            },
+                            certificatePath: {
+                                type: 'string'
+                            },
+                            keyPath: {
+                                type: 'string'
+                            }
+                        }
+                    }
+                },
+                required: [
+                    'protocol',
+                    'host',
+                    'port',
+                    'username',
+                    'password'
+                ]
+            };
+        }
+
         async init() {
             const result = await super.init(...arguments);
             Object.assign(ftpPortErrors, registerErrors(require('./errors')));
