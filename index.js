@@ -208,7 +208,7 @@ module.exports = function({utPort, registerErrors}) {
                             },
                             port: {
                                 type: 'integer',
-                                default: '21'
+                                default: 21
                             },
                             secure: {
                                 type: ['integer', 'string'],
