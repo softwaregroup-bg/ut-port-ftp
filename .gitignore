@@ -1,3 +1,5 @@
 package-lock.json
 .history/**/*
+.nyc_output
+.lint
 node_modules
