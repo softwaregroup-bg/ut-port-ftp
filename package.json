@@ -7,7 +7,9 @@
     "scp2": "0.5.0"
   },
   "devDependencies": {
+    "ftp-srv": "^4.3.1",
     "tap": "^14.10.6",
+    "ut-run": "10.19.9",
     "ut-tools": "^6.33.2"
   },
   "peerDependencies": {
