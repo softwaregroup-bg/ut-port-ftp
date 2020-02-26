@@ -30,6 +30,6 @@ module.exports = (protocol) => {
         method: `${protocol}.exec`,
         name: 'List files',
         params: {remoteDir: '/', method: 'list'},
-        result: (result, assert) => assert.true(result.findIndex(r => r.name === 'ftpTest.txt') === -1, 'File is no longer found on remote')
+        result: (result, assert) => assert.true(result.findIndex(r => r.name === `${protocol}Test.txt`) === -1, 'File is no longer found on remote')
     }];
 };
