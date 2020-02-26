@@ -41,7 +41,7 @@ module.exports = function FtpServer({config, utPort, utBus}) {
             const result = await super.start();
             const root = path.join(utBus.config.workDir, 'FtpServer');
             if (!fs.existsSync(root)) {
-                fs.mkdirSync(root);
+                fs.makeTreeSync(root);
             }
             this.server = new FtpSrv(config);
             this.server.on('login', (data, resolve) => resolve({root}));
