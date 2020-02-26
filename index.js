@@ -194,27 +194,14 @@ module.exports = function({utPort, registerErrors}) {
             return {
                 type: 'object',
                 properties: {
+                    protocol: {
+                        type: 'string',
+                        enum: ['ftp', 'sftp'],
+                        default: 'ftp'
+                    },
                     client: {
                         type: 'object',
                         properties: {
-                            protocol: {
-                                type: 'string',
-                                enum: ['ftp', 'sftp'],
-                                default: 'ftp'
-                            },
-                            secure: {
-                                type: 'boolean',
-                                default: false
-                            },
-                            secureOptions: {
-                                type: 'object',
-                                properties: {
-                                    rejectUnauthorized: {
-                                        type: 'boolean',
-                                        default: true
-                                    }
-                                }
-                            },
                             host: {
                                 type: 'string',
                                 default: '127.0.0.1'
@@ -228,10 +215,22 @@ module.exports = function({utPort, registerErrors}) {
                             },
                             password: {
                                 type: 'string'
+                            },
+                            secure: {
+                                type: 'boolean',
+                                default: false
+                            },
+                            secureOptions: {
+                                type: 'object',
+                                properties: {
+                                    rejectUnauthorized: {
+                                        type: 'boolean',
+                                        default: true
+                                    }
+                                }
                             }
                         },
                         required: [
-                            'protocol',
                             'host',
                             'port',
                             'username',
@@ -240,6 +239,7 @@ module.exports = function({utPort, registerErrors}) {
                     }
                 },
                 required: [
+                    'protocol',
                     'client'
                 ]
             };

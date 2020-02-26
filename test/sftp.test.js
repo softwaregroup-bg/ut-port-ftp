@@ -12,8 +12,8 @@ require('ut-run').run({
         test: true,
         FtpPort: {
             namespace: ['sftp'],
+            protocol: 'sftp',
             client: {
-                protocol: 'sftp',
                 host: '127.0.0.1',
                 port: 6000,
                 username: 'sftp',
