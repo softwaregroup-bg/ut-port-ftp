@@ -203,12 +203,10 @@ module.exports = function({utPort, registerErrors}) {
                         type: 'object',
                         properties: {
                             host: {
-                                type: 'string',
-                                default: '127.0.0.1'
+                                type: 'string'
                             },
                             port: {
-                                type: 'integer',
-                                default: 21
+                                type: 'integer'
                             },
                             username: {
                                 type: 'string'
@@ -242,6 +240,16 @@ module.exports = function({utPort, registerErrors}) {
                     'protocol',
                     'client'
                 ]
+            };
+        }
+
+        get uiSchema() {
+            return {
+                client: {
+                    password: {
+                        'ui:widget': 'password'
+                    }
+                }
             };
         }
 
@@ -296,7 +304,10 @@ module.exports = function({utPort, registerErrors}) {
             }
 
             if (this.config.protocol === 'sftp') {
-                this.client = new this.FtpClient(this.config.client.secureOptions || {});
+                this.client = new this.FtpClient({
+                    ...this.config.client,
+                    ...this.config.client.secureOptions
+                });
                 this.FtpDisconnect = () => this.client.close();
 
                 this.client.on('connect', function() {
