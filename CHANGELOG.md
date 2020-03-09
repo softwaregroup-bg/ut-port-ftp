@@ -1,3 +1,12 @@
+# [5.8.0](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v5.7.2...v5.8.0) (2020-03-09)
+
+
+### Features
+
+* installation / validation schema ([#11](https://github.com/softwaregroup-bg/ut-port-ftp/issues/11)) ([1558f42](https://github.com/softwaregroup-bg/ut-port-ftp/commit/1558f422ed38a8ee3d0bc7bb2065095348b497e1))
+
+
+
 ## [5.7.2](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v5.7.1...v5.7.2) (2020-01-17)
 
 
