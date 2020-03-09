@@ -1,9 +1,9 @@
-var fs = require('fs');
+const fs = require('fs');
 
-module.exports = function({utPort}) {
-    let ftpPortErrors;
+module.exports = function({utPort, registerErrors}) {
+    const ftpPortErrors = {};
 
-    var FTP = {
+    const FTP = {
         /**
          * @function download
          * @description Download file through ftp
@@ -15,7 +15,7 @@ module.exports = function({utPort}) {
                 if (this.config.protocol === 'sftp') {
                     this.client.download(message.remoteFile, message.localFile, function(err) {
                         if (err) {
-                            reject(ftpPortErrors['ftpPort'](err));
+                            reject(ftpPortErrors.ftpPort(err));
                         } else {
                             resolve(true);
                         }
@@ -23,10 +23,10 @@ module.exports = function({utPort}) {
                 } else {
                     this.client.get(message.remoteFile, function(err, stream) {
                         if (err) {
-                            reject(ftpPortErrors['ftpPort'](err));
+                            reject(ftpPortErrors.ftpPort(err));
                         } else {
                             if (!message.localFile) {
-                                var buffer = Buffer.alloc(0);
+                                let buffer = Buffer.alloc(0);
                                 stream.on('data', function(buf) {
                                     buffer = Buffer.concat([buffer, buf]);
                                 });
@@ -56,7 +56,7 @@ module.exports = function({utPort}) {
                 if (this.config.protocol === 'sftp') {
                     this.client.upload(message.localFile, message.remoteFile, function(err) {
                         if (err) {
-                            reject(ftpPortErrors['ftpPort'](err));
+                            reject(ftpPortErrors.ftpPort(err));
                         } else {
                             resolve(true);
                         }
@@ -64,7 +64,7 @@ module.exports = function({utPort}) {
                 } else {
                     this.client.put(message.localFile, message.remoteFile, function(err) {
                         if (err) {
-                            reject(ftpPortErrors['ftpPort'](err));
+                            reject(ftpPortErrors.ftpPort(err));
                         } else {
                             resolve(true);
                         }
@@ -83,11 +83,11 @@ module.exports = function({utPort}) {
                 if (this.config.protocol === 'sftp') {
                     this.client.sftp(function(err, sftp) {
                         if (err) {
-                            reject(ftpPortErrors['ftpPort'](err));
+                            reject(ftpPortErrors.ftpPort(err));
                         }
                         sftp.appendFile(message.fileName, Buffer.from(message.data, 'utf8'), false, function(err) {
                             if (err) {
-                                reject(ftpPortErrors['ftpPort'](err));
+                                reject(ftpPortErrors.ftpPort(err));
                             } else {
                                 resolve(true);
                             }
@@ -96,7 +96,7 @@ module.exports = function({utPort}) {
                 } else {
                     this.client.append(Buffer.from(message.data, 'utf8'), message.fileName, false, function(err) {
                         if (err) {
-                            reject(ftpPortErrors['ftpPort'](err));
+                            reject(ftpPortErrors.ftpPort(err));
                         } else {
                             resolve(true);
                         }
@@ -115,11 +115,11 @@ module.exports = function({utPort}) {
                 if (this.config.protocol === 'sftp') {
                     this.client.sftp(function(err, sftp) {
                         if (err) {
-                            reject(ftpPortErrors['ftpPort'](err));
+                            reject(ftpPortErrors.ftpPort(err));
                         } else {
                             sftp.readdir(message.remoteDir, function(err, list) {
                                 if (err) {
-                                    reject(ftpPortErrors['ftpPort'](err));
+                                    reject(ftpPortErrors.ftpPort(err));
                                 } else {
                                     resolve(list);
                                 }
@@ -129,7 +129,7 @@ module.exports = function({utPort}) {
                 } else {
                     this.client.list(message.remoteDir, function(err, list) {
                         if (err) {
-                            reject(ftpPortErrors['ftpPort'](err));
+                            reject(ftpPortErrors.ftpPort(err));
                         } else {
                             resolve(list);
                         }
@@ -148,11 +148,11 @@ module.exports = function({utPort}) {
                 if (this.config.protocol === 'sftp') {
                     this.client.sftp(function(err, sftp) {
                         if (err) {
-                            reject(ftpPortErrors['ftpPort'](err));
+                            reject(ftpPortErrors.ftpPort(err));
                         } else {
                             sftp.unlink(message.remoteFile, function(err) {
                                 if (err) {
-                                    reject(ftpPortErrors['ftpPort'](err));
+                                    reject(ftpPortErrors.ftpPort(err));
                                 } else {
                                     resolve(true);
                                 }
@@ -162,7 +162,7 @@ module.exports = function({utPort}) {
                 } else {
                     this.client.delete(message.remoteFile, function(err) {
                         if (err) {
-                            reject(ftpPortErrors['ftpPort'](err));
+                            reject(ftpPortErrors.ftpPort(err));
                         } else {
                             resolve(true);
                         }
@@ -175,8 +175,6 @@ module.exports = function({utPort}) {
     return class FtpPort extends utPort {
         constructor() {
             super(...arguments);
-            if (!this.errors || !this.errors.getError) throw new Error('Please use the latest version of ut-port');
-            ftpPortErrors = require('./errors')(this.errors);
             this.client = null;
             this.isReady = false;
             this.reconnecting = false;
@@ -191,8 +189,73 @@ module.exports = function({utPort}) {
             };
         }
 
+        get schema() {
+            return {
+                type: 'object',
+                properties: {
+                    protocol: {
+                        type: 'string',
+                        enum: ['ftp', 'sftp'],
+                        default: 'ftp'
+                    },
+                    client: {
+                        type: 'object',
+                        properties: {
+                            host: {
+                                type: 'string'
+                            },
+                            port: {
+                                type: 'integer'
+                            },
+                            username: {
+                                type: 'string'
+                            },
+                            password: {
+                                type: 'string'
+                            },
+                            secure: {
+                                type: 'boolean',
+                                default: false
+                            },
+                            secureOptions: {
+                                type: 'object',
+                                properties: {
+                                    rejectUnauthorized: {
+                                        type: 'boolean',
+                                        default: true
+                                    }
+                                }
+                            }
+                        },
+                        required: [
+                            'host',
+                            'port',
+                            'username',
+                            'password'
+                        ]
+                    }
+                },
+                required: [
+                    'protocol',
+                    'client'
+                ]
+            };
+        }
+
+        get uiSchema() {
+            return {
+                client: {
+                    password: {
+                        'ui:widget': 'password'
+                    }
+                }
+            };
+        }
+
         async init() {
             const result = await super.init(...arguments);
+            Object.assign(ftpPortErrors, registerErrors(require('./errors')));
+
             this.bytesSent = this.counter && this.counter('counter', 'bs', 'Bytes sent', 300);
             this.bytesReceived = this.counter && this.counter('counter', 'br', 'Bytes received', 300);
 
@@ -233,14 +296,17 @@ module.exports = function({utPort}) {
         }
 
         async start() {
-            let result = await super.start(...arguments);
+            const result = await super.start(...arguments);
 
             if (!(this.FtpClient instanceof Function)) {
-                throw ftpPortErrors['ftpPort.lib.init']('FTP library has not been initialized');
+                throw ftpPortErrors['ftpPort.init']('FTP library has not been initialized');
             }
 
             if (this.config.protocol === 'sftp') {
-                this.client = new this.FtpClient(this.config.client.secureOptions || {});
+                this.client = new this.FtpClient({
+                    ...this.config.client,
+                    ...this.config.client.secureOptions
+                });
                 this.FtpDisconnect = () => this.client.close();
 
                 this.client.on('connect', function() {
@@ -307,7 +373,7 @@ module.exports = function({utPort}) {
 
         exec(message) {
             if (this.config.protocol === 'sftp' || this.isReady) {
-                var $meta = (arguments.length && arguments[arguments.length - 1]);
+                const $meta = (arguments.length && arguments[arguments.length - 1]);
                 if (message.method && FTP[message.method]) {
                     return FTP[message.method].apply(this, arguments)
                         .then(function(result) {
@@ -324,12 +390,12 @@ module.exports = function({utPort}) {
 
         stop() {
             if (this.FtpDisconnect) {
-                let disconnect = this.FtpDisconnect;
+                const disconnect = this.FtpDisconnect;
                 this.FtpDisconnect = null;
                 disconnect.call(this);
             }
             if (this.reconnectInterval) {
-                let interval = this.reconnectInterval;
+                const interval = this.reconnectInterval;
                 this.reconnectInterval = null;
                 clearInterval(interval);
             }
