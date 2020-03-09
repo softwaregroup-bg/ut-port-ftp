@@ -6,7 +6,6 @@ module.exports = function FtpServer({config, utPort, utBus}) {
     return class FtpServer extends utPort {
         get defaults() {
             return {
-                id: 'ftpSrv',
                 type: 'ftpServer'
             };
         }
