@@ -389,16 +389,8 @@ module.exports = function({utPort, registerErrors}) {
         }
 
         stop() {
-            if (this.FtpDisconnect) {
-                const disconnect = this.FtpDisconnect;
-                this.FtpDisconnect = null;
-                disconnect.call(this);
-            }
-            if (this.reconnectInterval) {
-                const interval = this.reconnectInterval;
-                this.reconnectInterval = null;
-                clearInterval(interval);
-            }
+            if (this.FtpDisconnect) this.FtpDisconnect();
+            if (this.reconnectInterval) clearInterval(this.reconnectInterval);
             return super.stop(...arguments);
         }
     };
