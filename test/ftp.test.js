@@ -49,7 +49,7 @@ require('ut-run').run({
             method: 'ftp.exec',
             name: 'Download uploaded file',
             params: {remoteFile: 'ftpTest.txt', method: 'download'},
-            result: (result, assert) => assert.true(result.length > 0, 'File has content')
+            result: (result, assert) => assert.true(Buffer.from(result).length > 0, 'File has content')
         }, {
             method: 'ftp.exec',
             name: 'Remove uploaded file',
