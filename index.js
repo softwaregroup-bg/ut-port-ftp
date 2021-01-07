@@ -270,7 +270,7 @@ module.exports = function({utPort, registerErrors}) {
 
                 if (this.config.client.certificatePath && this.config.client.certificatePath.length) {
                     if (this.config.protocol === 'sftp') {
-
+                        // TODO
                     } else {
                         this.config.client.secureOptions = Object.assign(this.config.client.secureOptions, {
                             cert: fs.readFileSync(this.config.client.certificatePath, 'utf8')
