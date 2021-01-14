@@ -7,7 +7,7 @@
         "name": "Test",
         "type": "node",
         "request": "launch",
-        "program": "${workspaceRoot}/test/ftp.test.js",
+        "program": "${workspaceRoot}/test/${input:test}",
         "args": [],
         "cwd": "${workspaceRoot}",
         "console": "integratedTerminal",
@@ -21,5 +21,14 @@
             "NODE_PATH": "dev"
         },
         "outputCapture": "std"
+    }],
+    "inputs": [{
+        "id": "test",
+        "type": "pickString",
+        "description": "Pick test to run",
+        "options": [
+            "ftp.test.js",
+            "sftp.test.js"
+        ]
     }]
 }

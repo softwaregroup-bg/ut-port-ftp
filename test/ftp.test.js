@@ -1,10 +1,8 @@
-const path = require('path');
-
 require('ut-run').run({
     main: [
         () => ({
             test: () => [
-                require('./mock'),
+                require('./mock/ftp'),
                 require('..')
             ]
         })
@@ -31,34 +29,39 @@ require('ut-run').run({
     },
     params: {
         steps: [{
-            method: 'ftp.exec',
+            method: 'ftp.upload',
             name: 'Upload file successfully',
-            params: {localFile: path.join(__dirname, 'data', 'test.txt'), remoteFile: 'ftpTest.txt', method: 'upload'},
+            params: {localFile: 'ftpTest.txt', remoteFile: 'ftpTest.txt'},
             result: (result, assert) => assert.true(result, 'Successfully upload file')
         }, {
-            method: 'ftp.exec',
+            method: 'ftp.append',
             name: 'Append data to file',
-            params: {data: 'A new line to append \n', fileName: 'ftpTest.txt', method: 'append'},
+            params: {data: 'A new line to append \n', fileName: 'ftpTest.txt'},
             result: (result, assert) => assert.true(result, 'Successfully append data to uploaded file')
         }, {
-            method: 'ftp.exec',
+            method: 'ftp.list',
             name: 'List files',
-            params: {remoteDir: '/', method: 'list'},
+            params: {remoteDir: '/'},
             result: (result, assert) => assert.true(result.findIndex(r => r.name === 'ftpTest.txt') > -1, 'File is found on remote')
         }, {
-            method: 'ftp.exec',
+            method: 'ftp.download',
             name: 'Download uploaded file',
-            params: {remoteFile: 'ftpTest.txt', method: 'download'},
+            params: {remoteFile: 'ftpTest.txt'},
             result: (result, assert) => assert.true(Buffer.from(result).length > 0, 'File has content')
         }, {
-            method: 'ftp.exec',
+            method: 'ftp.download',
+            name: 'Download uploaded file',
+            params: {remoteFile: 'ftpTest.txt'},
+            result: (result, assert) => assert.true(result, 'File was downloaded')
+        }, {
+            method: 'ftp.remove',
             name: 'Remove uploaded file',
-            params: {remoteFile: 'ftpTest.txt', method: 'remove'},
+            params: {remoteFile: 'ftpTest.txt'},
             result: (result, assert) => assert.true(result, 'File is successfully removed')
         }, {
-            method: 'ftp.exec',
+            method: 'ftp.list',
             name: 'List files',
-            params: {remoteDir: '/', method: 'list'},
+            params: {remoteDir: '/'},
             result: (result, assert) => assert.true(result.findIndex(r => r.name === 'ftpTest.txt') === -1, 'File is no longer found on remote')
         }]
     }
