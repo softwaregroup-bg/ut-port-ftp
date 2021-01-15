@@ -2,7 +2,6 @@ require('ut-run').run({
     main: [
         () => ({
             test: () => [
-                require('./mock'),
                 require('..')
             ]
         })
@@ -12,26 +11,20 @@ require('ut-run').run({
         test: true,
         FtpPort: {
             namespace: ['ftp'],
-            protocol: 'ftp',
+            protocol: 'sftp',
             client: {
-                host: '127.0.0.1',
-                port: 5000,
-                username: 'ftp',
-                password: 'ftp'
+                host: 'bgs-vlx-dm-01',
+                port: 22,
+                username: 'sftp',
+                password: 'sftp123'
             }
-        },
-        FtpServer: {
-            url: 'ftp://127.0.0.1:5000',
-            pasv_url: '127.0.0.1',
-            username: 'ftp',
-            password: 'ftp'
         }
     },
     params: {
         steps: [{
             method: 'ftp.list',
             name: 'List files',
-            params: {remoteDir: 'abcd'},
+            params: {remoteDir: ''},
             error: (error, assert) => assert.equals(error.type, 'ftpPort', 'missing dir')
         }, {
             method: 'ftp.download',
@@ -43,11 +36,6 @@ require('ut-run').run({
             name: 'Remove non existing file',
             params: {remoteFile: 'nonexistingfile.txt'},
             error: (error, assert) => assert.equals(error.type, 'ftpPort', 'file does not exist')
-        }, {
-            method: 'ftp.unknown',
-            name: 'unknown method',
-            params: {localFile: 'ftpTest.txt', remoteFile: 'ftpTest.txt'},
-            error: (error, assert) => assert.equals(error.type, 'ftpPort.unknownMethod', 'unknown method error')
         }, {
             method: 'ftp.upload',
             name: 'Upload file successfully',
@@ -61,8 +49,8 @@ require('ut-run').run({
         }, {
             method: 'ftp.list',
             name: 'List files',
-            params: {remoteDir: '/'},
-            result: (result, assert) => assert.true(result.findIndex(r => r.name === 'ftpTest.txt') > -1, 'File is found on remote')
+            params: {remoteDir: './'},
+            result: (result, assert) => assert.true(result.findIndex(r => r.filename === 'ftpTest.txt') > -1, 'File is found on remote')
         }, {
             method: 'ftp.download',
             name: 'Download uploaded file',
@@ -71,7 +59,7 @@ require('ut-run').run({
         }, {
             method: 'ftp.download',
             name: 'Download uploaded file',
-            params: {remoteFile: 'ftpTest.txt', localFile: 'ftpDownload.txt'},
+            params: {remoteFile: 'ftpTest.txt', localFile: 'ftpsDownload.txt'},
             result: (result, assert) => assert.true(result, 'File was downloaded')
         }, {
             method: 'ftp.remove',
@@ -82,7 +70,7 @@ require('ut-run').run({
             method: 'ftp.list',
             name: 'List files',
             params: {remoteDir: '/'},
-            result: (result, assert) => assert.true(result.findIndex(r => r.name === 'ftpTest.txt') === -1, 'File is no longer found on remote')
+            result: (result, assert) => assert.true(result.findIndex(r => r.filename === 'ftpTest.txt') === -1, 'File is no longer found on remote')
         }]
     }
 });

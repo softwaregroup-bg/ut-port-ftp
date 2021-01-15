@@ -28,7 +28,9 @@
         "description": "Pick test to run",
         "options": [
             "ftp.test.js",
-            "sftp.test.js"
+            "ftpError.test.js",
+            "sftp.test.js",
+            "sftpError.test.js"
         ]
     }]
 }
