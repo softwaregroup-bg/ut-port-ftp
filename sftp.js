@@ -10,7 +10,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
             ...this.config.client.secureOptions
         });
 
-        this.client.on('error', this.log.error);
+        this.client.on('error', e => this.log.error && this.log.error(e));
         this.client.on('end', () => this.client.close);
 
         this.pull(this.exec);

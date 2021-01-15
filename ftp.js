@@ -12,21 +12,21 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
             this.pull(this.exec);
             this.isReady = true;
             this.reconnecting = false;
-            this.log && this.log.info && this.log.info('Connected');
+            this.log.info && this.log.info('Connected');
         });
 
         this.client.on('error', e => {
-            this.log && this.log.error && this.log.error(e);
+            this.log.error && this.log.error(e);
             this.isReady = false;
             this.reconnecting = false;
-            (this.reconnectInterval === null) && this.reconnect();
+            !this.reconnectInterval && this.reconnect();
         });
 
         this.client.on('close', () => {
-            this.log && this.log.info && this.log.info('Disconnected');
+            this.log.info && this.log.info('Disconnected');
             this.isReady = false;
             this.reconnecting = false;
-            (this.reconnectInterval === null) && this.reconnect();
+            !this.reconnectInterval && this.reconnect();
         });
 
         this.client.connect(Object.assign({}, this.config.client, {user: this.config.client.username}));
@@ -48,7 +48,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                 this.reconnectInterval = null;
             } else if (!this.reconnecting) {
                 this.reconnecting = true;
-                this.log && this.log.info && this.log.info('Reconnecting');
+                this.log.info && this.log.info('Reconnecting');
                 this.client.connect(Object.assign({}, this.config.client, {user: this.config.client.username}));
             }
         }, this.config.reconnectInterval || 10000);

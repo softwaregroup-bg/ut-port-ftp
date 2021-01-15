@@ -11,16 +11,16 @@ require('ut-run').run({
         test: true,
         FtpPort: {
             namespace: ['ftp'],
-            protocol: 'sftp',
+            protocol: 'ftp',
             client: {
-                host: 'bgs-vlx-dm-01',
-                port: 22,
-                username: 'sftp',
-                password: 'sftp123'
+                host: '127.0.0.1',
+                port: 9000,
+                username: 'ftp',
+                password: 'ftp3'
             }
         }
     },
     params: {
-        steps: require('./steps')
+        steps: []
     }
 });
