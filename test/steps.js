@@ -13,7 +13,7 @@ module.exports = async function steps(assert, bus) {
 
     await bus.importMethod('ftp.upload')({localFile: 'ftpTest.txt', remoteFile: 'ftpTest.txt'})
         .then(r => assert.true(r, 'Successfully upload file'));
-    await bus.importMethod('ftp.upload')({localFile: 'ftpTest.txt', remoteFile: 'ftpTest.txt'})
+    await bus.importMethod('ftp.append')({data: 'A new line to append \n', fileName: 'ftpTest.txt', method: 'append'})
         .then(r => assert.true(r, 'Successfully append data to uploaded file'));
 
     await bus.importMethod('ftp.list')({remoteDir: './'})
