@@ -74,22 +74,16 @@ module.exports = function({utPort, registerErrors}) {
             const result = await super.init(...arguments);
             Object.assign(this.errors, registerErrors(require('./errors')));
 
-            this.bytesSent = this.counter && this.counter('counter', 'bs', 'Bytes sent', 300);
-            this.bytesReceived = this.counter && this.counter('counter', 'br', 'Bytes received', 300);
-
             return result;
         }
 
         exec() {
             const [, $meta] = arguments;
-            const methodName = $meta && $meta.method;
-            if (methodName) {
-                const method = this.findHandler(methodName);
-                if (method instanceof Function) {
-                    return method.apply(this, Array.prototype.slice.call(arguments));
-                }
+            const method = this.findHandler($meta.method);
+            if (!(method instanceof Function)) {
+                throw this.errors['ftpPort.unknownMethod']();
             }
-            throw this.errors['ftpPort.unknownMethod']();
+            return method.apply(this, [...arguments]);
         }
     };
 };
