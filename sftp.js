@@ -10,28 +10,8 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
             ...this.config.client.secureOptions
         });
 
-        this.client.on('connect', function() {
-            this.reconnecting = false;
-            this.log && this.log.info && this.log.info('Connected');
-        }.bind(this));
-
-        this.client.on('ready', function() {
-            this.reconnecting = false;
-            this.log && this.log.info && this.log.info('Ready');
-        }.bind(this));
-
-        this.client.on('error', function(e) {
-            this.log && this.log.error && this.log.error(e);
-            this.isReady = false;
-            this.reconnecting = false;
-            (this.reconnectInterval === null) && this.reconnect();
-        }.bind(this));
-
-        this.client.on('end', function() {
-            this.reconnecting = false;
-            this.client.close();
-            this.log && this.log.info && this.log.info('Disconnected');
-        }.bind(this));
+        this.client.on('error', this.log.error);
+        this.client.on('end', () => this.client.close);
 
         this.pull(this.exec);
         return result;

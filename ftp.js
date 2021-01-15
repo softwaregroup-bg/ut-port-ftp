@@ -8,26 +8,26 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
 
         this.client = new FtpClient(this.config.client);
 
-        this.client.on('ready', function() {
+        this.client.on('ready', () => {
             this.pull(this.exec);
             this.isReady = true;
             this.reconnecting = false;
             this.log && this.log.info && this.log.info('Connected');
-        }.bind(this));
+        });
 
-        this.client.on('error', function(e) {
+        this.client.on('error', e => {
             this.log && this.log.error && this.log.error(e);
             this.isReady = false;
             this.reconnecting = false;
             (this.reconnectInterval === null) && this.reconnect();
-        }.bind(this));
+        });
 
-        this.client.on('close', function() {
+        this.client.on('close', () => {
             this.log && this.log.info && this.log.info('Disconnected');
             this.isReady = false;
             this.reconnecting = false;
             (this.reconnectInterval === null) && this.reconnect();
-        }.bind(this));
+        });
 
         this.client.connect(Object.assign({}, this.config.client, {user: this.config.client.username}));
 
@@ -36,7 +36,22 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
 
     stop() {
         this.client && this.client.destroy();
+        this.reconnectInterval && clearInterval(this.reconnectInterval);
         return super.stop(...arguments);
+    }
+
+    reconnect() {
+        this.reconnectInterval && clearInterval(this.reconnectInterval); // Ensure no interval will leak
+        this.reconnectInterval = setInterval(() => {
+            if (this.isReady) {
+                clearInterval(this.reconnectInterval);
+                this.reconnectInterval = null;
+            } else if (!this.reconnecting) {
+                this.reconnecting = true;
+                this.log && this.log.info && this.log.info('Reconnecting');
+                this.client.connect(Object.assign({}, this.config.client, {user: this.config.client.username}));
+            }
+        }, this.config.reconnectInterval || 10000);
     }
 
     get handlers() {

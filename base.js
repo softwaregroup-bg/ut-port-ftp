@@ -1,12 +1,5 @@
 module.exports = function({utPort, registerErrors}) {
     return class FtpPortBase extends utPort {
-        constructor() {
-            super(...arguments);
-            this.isReady = false;
-            this.reconnecting = false;
-            this.reconnectInterval = null;
-        }
-
         get defaults() {
             return {
                 type: 'ftpclient',
@@ -85,25 +78,6 @@ module.exports = function({utPort, registerErrors}) {
             this.bytesReceived = this.counter && this.counter('counter', 'br', 'Bytes received', 300);
 
             return result;
-        }
-
-        stop() {
-            if (this.reconnectInterval) clearInterval(this.reconnectInterval);
-            return super.stop(...arguments);
-        }
-
-        reconnect() {
-            this.reconnectInterval && clearInterval(this.reconnectInterval); // Ensure no interval will leak
-            this.reconnectInterval = setInterval(function() {
-                if (this.isReady) {
-                    clearInterval(this.reconnectInterval);
-                    this.reconnectInterval = null;
-                } else if (!this.reconnecting) {
-                    this.reconnecting = true;
-                    this.log && this.log.info && this.log.info('Reconnecting');
-                    this.client.connect(Object.assign({}, this.config.client, {user: this.config.client.username}));
-                }
-            }.bind(this), this.config.reconnectInterval || 10000);
         }
 
         exec() {
