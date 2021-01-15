@@ -38,6 +38,15 @@ module.exports = function({utPort, registerErrors}) {
                             secureOptions: {
                                 type: 'object',
                                 properties: {
+                                    cert: {
+                                        type: 'string'
+                                    },
+                                    privateKey: {
+                                        type: 'string'
+                                    },
+                                    key: {
+                                        type: 'string'
+                                    },
                                     rejectUnauthorized: {
                                         type: 'boolean',
                                         default: true
