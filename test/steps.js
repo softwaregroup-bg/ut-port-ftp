@@ -25,7 +25,7 @@ module.exports = async function steps(assert, bus) {
     await bus.importMethod('ftp.download')({remoteFile: filename})
         .then(r => assert.true(Buffer.from(r).length > 0, 'File has content'));
     await bus.importMethod('ftp.download')({remoteFile: filename, localFile: 'ftpDownload.txt'})
-        .then(r => assert.true(r, 'File was downloaded'));
+        .then(({filepath}) => assert.true(fs.readFileSync(filepath).length > 0, 'File was downloaded'));
 
     await bus.importMethod('ftp.remove')({remoteFile: filename})
         .then(r => assert.true(r, 'File is successfully removed'));
