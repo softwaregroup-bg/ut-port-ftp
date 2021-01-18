@@ -1,5 +1,4 @@
 require('ut-run').run({
-    implementation: 'ftp_test',
     main: [
         () => ({
             test: () => [
