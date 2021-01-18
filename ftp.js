@@ -26,7 +26,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
             this.log.info && this.log.info('Disconnected');
             this.isReady = false;
             this.reconnecting = false;
-            !this.reconnectInterval && this.reconnect();
+            !this.stopped && !this.reconnectInterval && this.reconnect();
         });
 
         this.client.connect(Object.assign({}, this.config.client, {user: this.config.client.username}));
@@ -37,6 +37,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
     stop() {
         this.client && this.client.destroy();
         this.reconnectInterval && clearInterval(this.reconnectInterval);
+        this.stopped = true;
         return super.stop(...arguments);
     }
 
