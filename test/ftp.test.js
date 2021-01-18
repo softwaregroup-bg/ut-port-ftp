@@ -28,6 +28,6 @@ require('ut-run').run({
         }
     },
     params: {
-        steps: require('./steps')
+        steps: []
     }
 });
