@@ -1,4 +1,5 @@
 require('ut-run').run({
+    implementation: 'sftp_test',
     main: [
         () => ({
             test: () => [

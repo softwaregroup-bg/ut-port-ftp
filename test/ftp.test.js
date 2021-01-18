@@ -1,4 +1,5 @@
 require('ut-run').run({
+    implementation: 'ftp_test',
     main: [
         () => ({
             test: () => [
@@ -28,6 +29,6 @@ require('ut-run').run({
         }
     },
     params: {
-        steps: []
+        steps: require('./steps')
     }
 });
