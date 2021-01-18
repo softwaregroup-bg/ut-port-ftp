@@ -34,7 +34,10 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                         if (!localFile) localFile = uuid();
                         const localFilePath = path.join(workDir, localFile);
                         this.client.download(message.remoteFile, localFilePath, err => {
-                            if (err) return reject(this.errors.ftpPort(err));
+                            if (err) {
+                                fs.unlinkSync(localFilePath);
+                                return reject(this.errors.ftpPort(err));
+                            }
                             if (!message.localFile) {
                                 const file = fs.readFileSync(localFilePath);
                                 fs.unlinkSync(localFilePath);
