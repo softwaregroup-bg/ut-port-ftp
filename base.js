@@ -1,4 +1,7 @@
-module.exports = function({utPort, registerErrors}) {
+const fs = require('fs');
+const path = require('path');
+
+module.exports = function({utPort, utBus, registerErrors}) {
     return class FtpPortBase extends utPort {
         get defaults() {
             return {
@@ -82,6 +85,11 @@ module.exports = function({utPort, registerErrors}) {
         async init() {
             const result = await super.init(...arguments);
             Object.assign(this.errors, registerErrors(require('./errors')));
+
+            this.workDir = path.join(utBus.config.workDir, 'ut-port-ftp');
+            if (!fs.existsSync(this.workDir)) {
+                fs.mkdirSync(this.workDir, {recursive: true});
+            }
 
             return result;
         }

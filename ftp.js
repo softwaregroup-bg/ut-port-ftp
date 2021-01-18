@@ -55,7 +55,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
     }
 
     get handlers() {
-        const [{utBus: {config: {workDir}}, config}] = params;
+        const [{utBus, config}] = params;
         return []
             .concat(config.namespace)
             .reduce((handlers, namespace) => ({
@@ -73,18 +73,18 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                                     resolve(buffer);
                                 });
                             } else {
-                                // todo handle error case
+                                const localFilePath = path.join(this.workDir, message.localFile);
                                 stream.once('close', function() {
-                                    resolve(true);
+                                    return resolve({filepath: localFilePath});
                                 });
-                                stream.pipe(fs.createWriteStream(path.join(workDir, message.localFile)));
+                                stream.pipe(fs.createWriteStream(localFilePath));
                             }
                         });
                     });
                 },
                 [`${namespace}.upload`](message) {
                     return new Promise((resolve, reject) => {
-                        this.client.put(path.join(workDir, message.localFile), message.remoteFile, err => {
+                        this.client.put(path.join(utBus.config.workDir, message.localFile), message.remoteFile, err => {
                             if (err) return reject(this.errors.ftpPort(err));
                             return resolve(true);
                         });

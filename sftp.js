@@ -23,7 +23,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
     }
 
     get handlers() {
-        const [{utBus: {config: {workDir}}, config}] = params;
+        const [{utBus, config}] = params;
         return []
             .concat(config.namespace)
             .reduce((handlers, namespace) => ({
@@ -32,7 +32,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                     return new Promise((resolve, reject) => {
                         let localFile = message.localFile;
                         if (!localFile) localFile = uuid();
-                        const localFilePath = path.join(workDir, localFile);
+                        const localFilePath = path.join(this.workDir, localFile);
                         this.client.download(message.remoteFile, localFilePath, err => {
                             if (err) {
                                 fs.unlinkSync(localFilePath);
@@ -43,13 +43,13 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                                 fs.unlinkSync(localFilePath);
                                 return resolve(file);
                             }
-                            return resolve(true);
+                            return resolve({filepath: localFilePath});
                         });
                     });
                 },
                 [`${namespace}.upload`]: function(message) {
                     return new Promise((resolve, reject) => {
-                        this.client.upload(path.join(workDir, message.localFile), message.remoteFile, err => {
+                        this.client.upload(path.join(utBus.config.workDir, message.localFile), message.remoteFile, err => {
                             if (err) reject(this.errors.ftpPort(err));
                             return resolve(true);
                         });
