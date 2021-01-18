@@ -54,10 +54,9 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
         }, this.config.reconnectInterval || 10000);
     }
 
-    get handlers() {
-        const [{utBus, config}] = params;
+    handlers() {
         return []
-            .concat(config.namespace)
+            .concat(this.config.namespace)
             .reduce((handlers, namespace) => ({
                 ...handlers,
                 [`${namespace}.download`](message) {
@@ -88,7 +87,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                 },
                 [`${namespace}.upload`](message) {
                     return new Promise((resolve, reject) => {
-                        this.client.put(path.join(utBus.config.workDir, message.localFile), message.remoteFile, err => {
+                        this.client.put(path.join(this.bus.config.workDir, message.localFile), message.remoteFile, err => {
                             if (err) return reject(this.errors.ftpPort(err));
                             return resolve(true);
                         });
