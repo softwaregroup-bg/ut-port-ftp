@@ -44,9 +44,6 @@ module.exports = function({utPort, utBus, registerErrors}) {
                                     cert: {
                                         type: 'string'
                                     },
-                                    privateKey: {
-                                        type: 'string'
-                                    },
                                     key: {
                                         type: 'string'
                                     },
