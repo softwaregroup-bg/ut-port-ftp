@@ -13,7 +13,7 @@ require('ut-run').run({
             namespace: ['ftp'],
             protocol: 'sftp',
             client: {
-                host: 'bgs-vlx-dm-01',
+                host: 'arpi4b',
                 port: 22,
                 username: 'sftp',
                 password: 'sftp123'
