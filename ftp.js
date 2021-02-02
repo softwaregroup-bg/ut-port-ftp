@@ -26,7 +26,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
             this.log.info && this.log.info('Disconnected');
             this.isReady = false;
             this.reconnecting = false;
-            !this.reconnectInterval && this.reconnect();
+            !this.stopped && !this.reconnectInterval && this.reconnect();
         });
 
         this.client.connect(Object.assign({}, this.config.client, {user: this.config.client.username}));
@@ -37,6 +37,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
     stop() {
         this.client && this.client.destroy();
         this.reconnectInterval && clearInterval(this.reconnectInterval);
+        this.stopped = true;
         return super.stop(...arguments);
     }
 
@@ -54,10 +55,9 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
         }, this.config.reconnectInterval || 10000);
     }
 
-    get handlers() {
-        const [{utBus, config}] = params;
+    handlers() {
         return []
-            .concat(config.namespace)
+            .concat(this.config.namespace)
             .reduce((handlers, namespace) => ({
                 ...handlers,
                 [`${namespace}.download`](message) {
@@ -88,7 +88,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                 },
                 [`${namespace}.upload`](message) {
                     return new Promise((resolve, reject) => {
-                        this.client.put(path.join(utBus.config.workDir, message.localFile), message.remoteFile, err => {
+                        this.client.put(path.join(this.bus.config.workDir, message.localFile), message.remoteFile, err => {
                             if (err) return reject(this.errors.ftpPort(err));
                             return resolve(true);
                         });

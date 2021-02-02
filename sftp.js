@@ -22,10 +22,9 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
         return super.stop(...arguments);
     }
 
-    get handlers() {
-        const [{utBus, config}] = params;
+    handlers() {
         return []
-            .concat(config.namespace)
+            .concat(this.config.namespace)
             .reduce((handlers, namespace) => ({
                 ...handlers,
                 [`${namespace}.download`]: function(message) {
@@ -49,7 +48,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                 },
                 [`${namespace}.upload`]: function(message) {
                     return new Promise((resolve, reject) => {
-                        this.client.upload(path.join(utBus.config.workDir, message.localFile), message.remoteFile, err => {
+                        this.client.upload(path.join(this.bus.config.workDir, message.localFile), message.remoteFile, err => {
                             if (err) reject(this.errors.ftpPort(err));
                             return resolve(true);
                         });
