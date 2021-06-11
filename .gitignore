@@ -1,5 +1,13 @@
-package-lock.json
-.history/**/*
 .nyc_output
+.history
+.idea
 .lint
+.tern*
+*.log
+coverage
+dev
 node_modules
+npm-debug.*
+package-lock.json
+yarn.lock
+.ut_*rc
