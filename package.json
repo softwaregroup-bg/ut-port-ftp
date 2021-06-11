@@ -1,6 +1,6 @@
 {
   "name": "ut-port-ftp",
-  "version": "6.0.0-port-split.0",
+  "version": "6.0.0-port-split.1",
   "main": "./index.js",
   "dependencies": {
     "ftp": "0.3.10",
