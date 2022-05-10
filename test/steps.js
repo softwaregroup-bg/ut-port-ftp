@@ -17,12 +17,12 @@ module.exports = async function steps(assert, bus) {
         .catch(e => assert.equals(e.type, 'ftpPort', 'file does not exist'));
 
     await bus.importMethod('ftp.upload')({localFile: filename, remoteFile: filename})
-        .then(r => assert.true(r, 'Successfully upload file'));
+        .then(r => assert.ok(r, 'Successfully upload file'));
     await bus.importMethod('ftp.append')({data: appendText, fileName: filename})
-        .then(r => assert.true(r, 'Successfully append data to uploaded file'));
+        .then(r => assert.ok(r, 'Successfully append data to uploaded file'));
 
     await bus.importMethod('ftp.list')({remoteDir: './'})
-        .then(r => assert.true(r.findIndex(i => (i.name || i.filename) === filename) > -1, 'File is found on remote'));
+        .then(r => assert.ok(r.findIndex(i => (i.name || i.filename) === filename) > -1, 'File is found on remote'));
     await bus.importMethod('ftp.download')({remoteFile: filename})
         .then(r => {
             assert.ok(Buffer.from(r).length > 0, 'File has content');
@@ -30,10 +30,10 @@ module.exports = async function steps(assert, bus) {
             return true;
         });
     await bus.importMethod('ftp.download')({remoteFile: filename, localFile: 'ftpDownload.txt'})
-        .then(({filepath}) => assert.true(fs.readFileSync(filepath).length > 0, 'File was downloaded'));
+        .then(({filepath}) => assert.ok(fs.readFileSync(filepath).length > 0, 'File was downloaded'));
 
     await bus.importMethod('ftp.remove')({remoteFile: filename})
-        .then(r => assert.true(r, 'File is successfully removed'));
+        .then(r => assert.ok(r, 'File is successfully removed'));
     await bus.importMethod('ftp.list')({remoteDir: './'})
-        .then(r => assert.true(r.findIndex(i => (i.name || i.filename) === filename) === -1, 'File is not found on remote'));
+        .then(r => assert.ok(r.findIndex(i => (i.name || i.filename) === filename) === -1, 'File is not found on remote'));
 };
