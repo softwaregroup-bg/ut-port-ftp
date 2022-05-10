@@ -3,21 +3,23 @@ const path = require('path');
 const {v4: uuid} = require('uuid');
 const filename = `${uuid()}.txt`;
 const initialText = 'Test file to upload\n';
-const appendText = 'A new line to append \n';
+const appendText = 'A new line to append\n';
 
 module.exports = async function steps(assert, bus) {
     fs.writeFileSync(path.join(bus.config.workDir, 'ut-port-ftp', filename), initialText);
     await bus.importMethod('ftp.unknown')({})
-        .catch(e => assert.equals(e.type, 'ftpPort.unknownMethod', 'unknown method'));
+        .catch(e => assert.equal(e.type, 'ftpPort.unknownMethod', 'unknown method'));
     await bus.importMethod('ftp.list')({remoteDir: 'abcd'})
-        .catch(e => assert.equals(e.type, 'ftpPort', 'missing dir'));
+        .catch(e => assert.equal(e.type, 'ftpPort', 'missing dir'));
     await bus.importMethod('ftp.download')({remoteFile: 'nonexistingfile.txt'})
-        .catch(e => assert.equals(e.type, 'ftpPort', 'file does not exist'));
+        .catch(e => assert.equal(e.type, 'ftpPort', 'file does not exist'));
     await bus.importMethod('ftp.remove')({remoteFile: 'nonexistingfile.txt'})
-        .catch(e => assert.equals(e.type, 'ftpPort', 'file does not exist'));
+        .catch(e => assert.equal(e.type, 'ftpPort', 'file does not exist'));
 
     await bus.importMethod('ftp.upload')({localFile: filename, remoteFile: filename})
         .then(r => assert.ok(r, 'Successfully upload file'));
+    await bus.importMethod('ftp.download')({remoteFile: filename})
+            .then(r => assert.ok(Buffer.from(r).toString() === initialText))
     await bus.importMethod('ftp.append')({data: appendText, fileName: filename})
         .then(r => assert.ok(r, 'Successfully append data to uploaded file'));
 
