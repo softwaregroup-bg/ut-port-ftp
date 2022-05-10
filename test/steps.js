@@ -19,7 +19,7 @@ module.exports = async function steps(assert, bus) {
     await bus.importMethod('ftp.upload')({localFile: filename, remoteFile: filename})
         .then(r => assert.ok(r, 'Successfully upload file'));
     await bus.importMethod('ftp.download')({remoteFile: filename})
-            .then(r => assert.ok(Buffer.from(r).toString() === initialText))
+        .then(r => assert.ok(Buffer.from(r).toString() === initialText));
     await bus.importMethod('ftp.append')({data: appendText, fileName: filename})
         .then(r => assert.ok(r, 'Successfully append data to uploaded file'));
 
