@@ -1,11 +1,12 @@
 const fs = require('fs');
 const path = require('path');
-const data = fs.readFileSync(path.join(__dirname, 'data', 'test.txt'));
 const {v4: uuid} = require('uuid');
 const filename = `${uuid()}.txt`;
+const initialText = 'Test file to upload\n';
+const appendText = 'A new line to append \n';
 
 module.exports = async function steps(assert, bus) {
-    fs.writeFileSync(path.join(bus.config.workDir, filename), data);
+    fs.writeFileSync(path.join(bus.config.workDir, 'ut-port-ftp', filename), initialText);
     await bus.importMethod('ftp.unknown')({})
         .catch(e => assert.equals(e.type, 'ftpPort.unknownMethod', 'unknown method'));
     await bus.importMethod('ftp.list')({remoteDir: 'abcd'})
@@ -17,13 +18,17 @@ module.exports = async function steps(assert, bus) {
 
     await bus.importMethod('ftp.upload')({localFile: filename, remoteFile: filename})
         .then(r => assert.true(r, 'Successfully upload file'));
-    await bus.importMethod('ftp.append')({data: 'A new line to append \n', fileName: filename})
+    await bus.importMethod('ftp.append')({data: appendText, fileName: filename})
         .then(r => assert.true(r, 'Successfully append data to uploaded file'));
 
     await bus.importMethod('ftp.list')({remoteDir: './'})
         .then(r => assert.true(r.findIndex(i => (i.name || i.filename) === filename) > -1, 'File is found on remote'));
     await bus.importMethod('ftp.download')({remoteFile: filename})
-        .then(r => assert.true(Buffer.from(r).length > 0, 'File has content'));
+        .then(r => {
+            assert.ok(Buffer.from(r).length > 0, 'File has content');
+            assert.ok(Buffer.from(r).toString() === initialText + appendText);
+            return true;
+        });
     await bus.importMethod('ftp.download')({remoteFile: filename, localFile: 'ftpDownload.txt'})
         .then(({filepath}) => assert.true(fs.readFileSync(filepath).length > 0, 'File was downloaded'));
 
