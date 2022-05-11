@@ -6,34 +6,58 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
     async start() {
         const result = await super.start(...arguments);
         this.client = new Client();
-        await new Promise(resolve => {
-            this.client
-                .on('error', error => this.log?.error?.(error))
-                .on('end', () => {
-                    this.client?.end?.();
-                    this.client?.destroy?.();
-                })
-                .on('ready', resolve)
-                .connect(this.config.client);
-        });
+        this.client
+            .on('error', error => {
+                if (!this.isConnecting) return this.log?.error?.(error);
+                this.rejectReady(error);
+                delete this.isConnecting;
+            })
+            .on('close', async() => {
+                if (this.sftp) {
+                    const sftp = await this.sftp;
+                    sftp.end();
+                    delete this.sftp;
+                }
+                await this.connect().catch(e => this.log?.error?.(e));
+            });
+
+        await this.connect().catch(e => this.log?.error?.(e));
         this.pull(this.exec);
         return result;
+    }
+
+    async connect() {
+        if (['stopping', 'stopped'].includes(this.state) || !this.client) return false;
+        if (this.isConnecting) return await this.isConnecting;
+        if (this.resolveReady) this.client.removeListener('ready', this.resolveReady);
+
+        this.isConnecting = new Promise((resolve, reject) => {
+            this.resolveReady = resolve;
+            this.rejectReady = reject;
+            this.client
+                .on('ready', this.resolveReady)
+                .connect(this.config.client);
+        });
+        await this.isConnecting;
+        delete this.isConnecting;
     }
 
     async stop() {
         const result = super.stop(...arguments);
         this.client?.end?.();
-        this.client?.destroy?.();
         delete this.client;
         return result;
     }
 
     async getStream(params, $meta) {
+        if (this.isConnecting) await this.isConnecting;
         if (this.sftp) return this.sftp;
         this.sftp = new Promise((resolve, reject) =>
             this.client.sftp((error, sftp) => {
-                if (error) return reject(error);
-                sftp.on('error', e => this.error(e, $meta));
+                if (error) {
+                    this.error(error, $meta);
+                    return reject(error);
+                }
                 sftp.on('close', () => delete this.sftp);
                 resolve(sftp);
             })
@@ -75,7 +99,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                     const sftp = await this.getStream(params, $meta);
                     return new Promise((resolve, reject) =>
                         sftp.appendFile(params.fileName, Buffer.from(params.data, 'utf8'), {}, e => {
-                            if (e) return (this.errors.ftpPort(e));
+                            if (e) return reject(this.errors.ftpPort(e));
                             return resolve(true);
                         })
                     );
