@@ -30,15 +30,15 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
 
     async getStream(params, $meta) {
         if (this.sftp) return this.sftp;
-        return new Promise((resolve, reject) =>
+        this.sftp = new Promise((resolve, reject) =>
             this.client.sftp((error, sftp) => {
                 if (error) return reject(error);
-                this.sftp = sftp;
                 sftp.on('error', e => this.error(e, $meta));
                 sftp.on('close', () => delete this.sftp);
                 resolve(sftp);
             })
         );
+        return this.sftp;
     }
 
     handlers() {
