@@ -1,3 +1,12 @@
+# [6.1.0](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v6.0.0...v6.1.0) (2022-05-12)
+
+
+### Features
+
+* switch to ssh2 ([#17](https://github.com/softwaregroup-bg/ut-port-ftp/issues/17)) ([a09cb58](https://github.com/softwaregroup-bg/ut-port-ftp/commit/a09cb586844857b3c4155aa31391e168c2741a20))
+
+
+
 # [6.0.0](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v5.8.0...v6.0.0) (2021-06-11)
 
 
