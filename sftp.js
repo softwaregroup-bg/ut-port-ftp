@@ -1,25 +1,68 @@
-const {Client} = require('scp2');
+const {Client} = require('ssh2');
 const {v4: uuid} = require('uuid');
 const fs = require('fs');
 const path = require('path');
 module.exports = (...params) => class FtpPort extends require('./base')(...params) {
     async start() {
         const result = await super.start(...arguments);
-        this.client = new Client({
-            ...this.config.client,
-            ...this.config.client.secureOptions
-        });
+        this.client = new Client();
+        this.client
+            .on('error', error => {
+                if (!this.isConnecting) return this.log?.error?.(error);
+                this.rejectReady(error);
+                delete this.isConnecting;
+            })
+            .on('close', async() => {
+                if (this.sftp) {
+                    const sftp = await this.sftp;
+                    sftp.end();
+                    delete this.sftp;
+                }
+                await this.connect().catch(e => this.log?.error?.(e));
+            });
 
-        this.client.on('error', e => this.log.error && this.log.error(e));
-        this.client.on('end', () => this.client.close);
-
+        await this.connect().catch(e => this.log?.error?.(e));
         this.pull(this.exec);
         return result;
     }
 
-    stop() {
-        this.client && this.client.close();
-        return super.stop(...arguments);
+    async connect() {
+        if (['stopping', 'stopped'].includes(this.state) || !this.client) return false;
+        if (this.isConnecting) return await this.isConnecting;
+        if (this.resolveReady) this.client.removeListener('ready', this.resolveReady);
+
+        this.isConnecting = new Promise((resolve, reject) => {
+            this.resolveReady = resolve;
+            this.rejectReady = reject;
+            this.client
+                .on('ready', this.resolveReady)
+                .connect(this.config.client);
+        });
+        await this.isConnecting;
+        delete this.isConnecting;
+    }
+
+    async stop() {
+        const result = super.stop(...arguments);
+        this.client?.end?.();
+        delete this.client;
+        return result;
+    }
+
+    async getStream(params, $meta) {
+        if (this.isConnecting) await this.isConnecting;
+        if (this.sftp) return this.sftp;
+        this.sftp = new Promise((resolve, reject) =>
+            this.client.sftp((error, sftp) => {
+                if (error) {
+                    this.error(error, $meta);
+                    return reject(error);
+                }
+                sftp.on('close', () => delete this.sftp);
+                resolve(sftp);
+            })
+        );
+        return this.sftp;
     }
 
     handlers() {
@@ -27,65 +70,57 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
             .concat(this.config.namespace)
             .reduce((handlers, namespace) => ({
                 ...handlers,
-                [`${namespace}.download`]: function(message) {
-                    return new Promise((resolve, reject) => {
-                        let localFile = message.localFile;
-                        if (!localFile) localFile = uuid();
-                        const localFilePath = path.join(this.workDir, localFile);
-                        this.client.download(message.remoteFile, localFilePath, err => {
-                            if (err) {
-                                fs.unlinkSync(localFilePath);
-                                return reject(this.errors.ftpPort(err));
-                            }
-                            if (!message.localFile) {
+                async [`${namespace}.download`](params, $meta) {
+                    const sftp = await this.getStream(params, $meta);
+                    const localFile = params?.localFile || uuid();
+                    const localFilePath = path.join(this.workDir, localFile);
+                    return new Promise((resolve, reject) =>
+                        sftp.fastGet(params.remoteFile, localFilePath, {}, e => {
+                            if (e) return reject(this.errors.ftpPort(e));
+                            if (!params?.localFile) {
                                 const file = fs.readFileSync(localFilePath);
                                 fs.unlinkSync(localFilePath);
                                 return resolve(file);
                             }
                             return resolve({filepath: localFilePath});
-                        });
-                    });
+                        })
+                    );
                 },
-                [`${namespace}.upload`]: function(message) {
-                    return new Promise((resolve, reject) => {
-                        this.client.upload(path.join(this.bus.config.workDir, message.localFile), message.remoteFile, err => {
-                            if (err) reject(this.errors.ftpPort(err));
+                async  [`${namespace}.upload`](params, $meta) {
+                    const sftp = await this.getStream(params, $meta);
+                    return new Promise((resolve, reject) =>
+                        sftp.fastPut(path.join(this.workDir, params.localFile), params.remoteFile, {}, e => {
+                            if (e) return reject(this.errors.ftpPort(e));
                             return resolve(true);
-                        });
-                    });
+                        })
+                    );
                 },
-                [`${namespace}.append`]: function(message) {
-                    return new Promise((resolve, reject) => {
-                        this.client.sftp((err, sftp) => {
-                            if (err) return reject(this.errors.ftpPort(err));
-                            sftp.appendFile(message.fileName, Buffer.from(message.data, 'utf8'), false, err => {
-                                if (err) return reject(this.errors.ftpPort(err));
-                                return resolve(true);
-                            });
-                        });
-                    });
+                async  [`${namespace}.append`](params, $meta) {
+                    const sftp = await this.getStream(params, $meta);
+                    return new Promise((resolve, reject) =>
+                        sftp.appendFile(params.fileName, Buffer.from(params.data, 'utf8'), {}, e => {
+                            if (e) return reject(this.errors.ftpPort(e));
+                            return resolve(true);
+                        })
+                    );
                 },
-                [`${namespace}.list`]: function(message) {
-                    return new Promise((resolve, reject) => {
-                        this.client.sftp((err, sftp) => {
-                            if (err) return reject(this.errors.ftpPort(err));
-                            sftp.readdir(message.remoteDir, (err, list) => {
-                                if (err) return reject(this.errors.ftpPort(err));
-                                return resolve(list);
-                            });
-                        });
-                    });
+                async [`${namespace}.list`](params, $meta) {
+                    const sftp = await this.getStream(params, $meta);
+                    return new Promise((resolve, reject) =>
+                        sftp.readdir(params.remoteDir, {}, (e, files) => {
+                            if (e) return reject(this.errors.ftpPort(e));
+                            return resolve(files);
+                        })
+                    );
                 },
-                [`${namespace}.remove`]: function(message) {
-                    return new Promise((resolve, reject) => {
-                        this.client.sftp((err, sftp) => {
-                            if (err) return reject(this.errors.ftpPort(err));
-                            sftp.unlink(message.remoteFile, err => {
-                                if (err) return reject(this.errors.ftpPort(err));
-                                return resolve(true);
-                            });
-                        });
-                    });
+                async [`${namespace}.remove`](params, $meta) {
+                    const sftp = await this.getStream(params, $meta);
+                    return new Promise((resolve, reject) =>
+                        sftp.unlink(params.remoteFile, e => {
+                            if (e) return reject(this.errors.ftpPort(e));
+                            return resolve(true);
+                        })
+                    );
                 }
             }), {});
     }

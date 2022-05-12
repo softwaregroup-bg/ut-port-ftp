@@ -88,7 +88,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                 },
                 [`${namespace}.upload`](message) {
                     return new Promise((resolve, reject) => {
-                        this.client.put(path.join(this.bus.config.workDir, message.localFile), message.remoteFile, err => {
+                        this.client.put(path.join(this.workDir, message.localFile), message.remoteFile, err => {
                             if (err) return reject(this.errors.ftpPort(err));
                             return resolve(true);
                         });
