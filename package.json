@@ -10,7 +10,7 @@
   "devDependencies": {
     "ftp-srv": "4.6.1",
     "tap": "^16.2.0",
-    "ut-run": "10.68.0",
+    "ut-run": "10.68.1",
     "ut-tools": "^6.40.8"
   },
   "peerDependencies": {
