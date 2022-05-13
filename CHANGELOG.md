@@ -1,3 +1,7 @@
+## [6.1.1](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v6.1.0...v6.1.1) (2022-05-13)
+
+
+
 # [6.1.0](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v6.0.0...v6.1.0) (2022-05-12)
 
 
