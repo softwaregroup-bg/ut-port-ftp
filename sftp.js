@@ -75,7 +75,7 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                     const localFile = params?.localFile || uuid();
                     const localFilePath = path.join(this.workDir, localFile);
                     return new Promise((resolve, reject) =>
-                        sftp.fastGet(params.remoteFile, localFilePath, {chunkSize: 31952}, e => {
+                        sftp.fastGet(params.remoteFile, localFilePath, {...this?.config?.fastGet?.options}, e => {
                             if (e) return reject(this.errors.ftpPort(e));
                             if (!params?.localFile) {
                                 const file = fs.readFileSync(localFilePath);
