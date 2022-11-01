@@ -1,3 +1,12 @@
+## [6.1.2](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v6.1.1...v6.1.2) (2022-11-01)
+
+
+### Bug Fixes
+
+* sftp fastGet download - files which size is greater than 64KB are corrupted ([#19](https://github.com/softwaregroup-bg/ut-port-ftp/issues/19)) ([eac46fb](https://github.com/softwaregroup-bg/ut-port-ftp/commit/eac46fb59aec37767dfa366b2a9fa177709bc0da))
+
+
+
 ## [6.1.1](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v6.1.0...v6.1.1) (2022-05-13)
 
 
