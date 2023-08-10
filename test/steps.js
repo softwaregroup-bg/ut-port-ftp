@@ -45,4 +45,6 @@ module.exports = async function steps(assert, bus) {
         .then(r => assert.ok(r, 'Successfully rename file'));
     await bus.importMethod('ftp.list')({remoteDir: './'})
         .then(r => assert.ok(r.findIndex(i => (i.name || i.filename) === `new_${filename}`) >= 0, 'Remote file was renamed'));
+    await bus.importMethod('ftp.rename')({remoteFile: filename, remoteTarget: `new_${filename}`})
+        .catch(e => assert.equal(e.type, 'ftpPort', 'inexistent file rename should fail'));
 };
