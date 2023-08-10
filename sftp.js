@@ -121,6 +121,15 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                             return resolve(true);
                         })
                     );
+                },
+                async [`${namespace}.rename`](params, $meta) {
+                    const sftp = await this.getStream(params, $meta);
+                    return new Promise((resolve, reject) =>
+                        sftp.rename(params.remoteFile, params.remoteTarget, e => {
+                            if (e) return reject(this.errors.ftpPort(e));
+                            return resolve(true);
+                        })
+                    );
                 }
             }), {});
     }

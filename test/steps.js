@@ -38,4 +38,11 @@ module.exports = async function steps(assert, bus) {
         .then(r => assert.ok(r, 'File is successfully removed'));
     await bus.importMethod('ftp.list')({remoteDir: './'})
         .then(r => assert.ok(r.findIndex(i => (i.name || i.filename) === filename) === -1, 'File is not found on remote'));
+
+    await bus.importMethod('ftp.upload')({localFile: filename, remoteFile: filename})
+        .then(r => assert.ok(r, 'Successfully upload file'));
+    await bus.importMethod('ftp.rename')({remoteFile: filename, remoteTarget: `new_${filename}`})
+        .then(r => assert.ok(r, 'Successfully rename file'));
+    await bus.importMethod('ftp.list')({remoteDir: './'})
+        .then(r => assert.ok(r.findIndex(i => (i.name || i.filename) === `new_${filename}`) >= 0, 'Remote file was renamed'));
 };

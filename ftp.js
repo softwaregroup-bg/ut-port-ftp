@@ -117,6 +117,14 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                             return resolve(true);
                         });
                     });
+                },
+                [`${namespace}.rename`](message) {
+                    return new Promise((resolve, reject) => {
+                        this.client.rename(message.remoteFile, message.remoteTarget, err => {
+                            if (err) return reject(this.errors.ftpPort(err));
+                            return resolve(true);
+                        });
+                    });
                 }
             }), {});
     }
