@@ -34,6 +34,7 @@ __NOTE__: The protocol and the presence and need of key and certificate depend o
   - _fileName_ (string) - relative path and name of the file on the ftp server to which the _data_ will be appended
 - `list` - list all files within a folder on a remote ftp server
 - `remove` - remove a file through ftp
+- `rename` - rename/move a file on a remote ftp server
 
 ---
 
