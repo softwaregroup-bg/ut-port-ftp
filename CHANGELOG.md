@@ -1,3 +1,12 @@
+# [6.2.0](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v6.1.2...v6.2.0) (2023-08-10)
+
+
+### Features
+
+* rename/move files in a remote folder ([#20](https://github.com/softwaregroup-bg/ut-port-ftp/issues/20)) ([2633ed0](https://github.com/softwaregroup-bg/ut-port-ftp/commit/2633ed03c4dc4407f2fc4d891e38745b183fac38))
+
+
+
 ## [6.1.2](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v6.1.1...v6.1.2) (2022-11-01)
 
 
