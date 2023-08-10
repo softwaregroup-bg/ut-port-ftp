@@ -21,6 +21,6 @@ require('ut-run').run({
         }
     },
     params: {
-        steps: require('./steps')
+        steps: require('./steps')('upload')
     }
 });

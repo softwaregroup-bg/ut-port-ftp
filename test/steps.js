@@ -4,9 +4,8 @@ const {v4: uuid} = require('uuid');
 const filename = `${uuid()}.txt`;
 const initialText = 'Test file to upload\n';
 const appendText = 'A new line to append\n';
-const remoteDir = 'upload';
 
-module.exports = async function steps(assert, bus) {
+module.exports = remoteDir => async function steps(assert, bus) {
     fs.writeFileSync(path.join(bus.config.workDir, 'ut-port-ftp', filename), initialText);
     await bus.importMethod('ftp.unknown')({})
         .catch(e => assert.equal(e.type, 'ftpPort.unknownMethod', 'unknown method'));
