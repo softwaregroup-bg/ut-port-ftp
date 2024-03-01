@@ -79,7 +79,9 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                             if (e) return reject(this.errors.ftpPort(e));
                             if (!params?.localFile) {
                                 const file = fs.readFileSync(localFilePath);
-                                fs.unlinkSync(localFilePath);
+                                if(fs.existsSync(localFilePath)) {
+                                    fs.unlinkSync(localFilePath);
+                                }
                                 return resolve(file);
                             }
                             return resolve({filepath: localFilePath});

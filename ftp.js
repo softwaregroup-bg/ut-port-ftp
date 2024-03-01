@@ -78,7 +78,9 @@ module.exports = (...params) => class FtpPort extends require('./base')(...param
                                     return resolve({filepath: localFilePath});
                                 });
                                 stream.once('error', function(e) {
-                                    fs.unlinkSync(localFilePath);
+                                    if(fs.existsSync(localFilePath)) {
+                                        fs.unlinkSync(localFilePath);
+                                    }
                                     return reject(e);
                                 });
                                 stream.pipe(fs.createWriteStream(localFilePath));
