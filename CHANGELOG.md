@@ -1,3 +1,12 @@
+## [6.2.1](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v6.2.0...v6.2.1) (2024-03-01)
+
+
+### Bug Fixes
+
+* BPS-451 Try to delete  not exist file for connection error. ([#21](https://github.com/softwaregroup-bg/ut-port-ftp/issues/21)) ([a22bc84](https://github.com/softwaregroup-bg/ut-port-ftp/commit/a22bc848d5e1ab1708f93acc6a27b5c0cf795fee))
+
+
+
 # [6.2.0](https://github.com/softwaregroup-bg/ut-port-ftp/compare/v6.1.2...v6.2.0) (2023-08-10)
 
 
